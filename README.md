@@ -1,1 +1,1 @@
-# Rose-AI-Assitance
+# Rose-AI-Assistance
