@@ -1,0 +1,7 @@
+
+
+1) Create the repo alongside necessary folders and files including installing packages
+- python3 -m venv venv
+-source venv/bin/activate
+
+-pip3 install ---- <- packages from requirements.txt
