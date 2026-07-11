@@ -5,3 +5,8 @@
 -source venv/bin/activate
 
 -pip3 install ---- <- packages from requirements.txt
+
+
+1) Create audio_io.py:
+    Allows user to record their audio, output in a file and main.py handles the functionality of repeating back the message
+    
