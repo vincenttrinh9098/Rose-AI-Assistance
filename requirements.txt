@@ -2,3 +2,7 @@ faster-whisper
 sounddevice
 soundfile
 pyttsx3
+openwakeword
+onnxruntime
+dotenv
+anthropic

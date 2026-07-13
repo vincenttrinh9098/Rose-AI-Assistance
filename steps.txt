@@ -7,6 +7,24 @@
 -pip3 install ---- <- packages from requirements.txt
 
 
-1) Create audio_io.py:
+python3.12 -m venv venv
+source venv/bin/activate
+pip3 install -r requirements.txt
+
+### /Core
+* Create core/audio_io.py:
     Allows user to record their audio, output in a file and main.py handles the functionality of repeating back the message
+
+* core/dispatcher.py: 
+    Handles the functionality part of the core, the command is parse through, dispatcher decides what functions need to be called
+
+### /Commands
+* commands/browser.py:
+    Handles commands that have to do with browsers (open, search on google....)
     
+
+
+
+### /Ai 
+* /ai/llm.py
+    Handles parsed text from dispatch.py -> claude restructures into json format after understanding user intent 
