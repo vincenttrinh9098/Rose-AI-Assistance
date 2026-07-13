@@ -1,48 +1,59 @@
 """
-ai/llm.py
-
-Sends transcribed text to Claude, gets back a structured action decision.
-dispatch() will call this instead of doing string matching itself.
+ai/llm.py - now using tool use / structured output instead of prompted JSON.
 """
 
 import os
-import json
 from dotenv import load_dotenv
 from anthropic import Anthropic
 
-load_dotenv()  # reads .env into environment variables
-
-# TODO: create the Anthropic client once at import time
-# Anthropic() automatically reads ANTHROPIC_API_KEY from the environment - no need to pass it manually
+load_dotenv()
 client = Anthropic()
 
-SYSTEM_PROMPT = """You are a command router for a voice assistant.
-Given the user's spoken text, respond with ONLY a raw JSON object and nothing else.
-Do NOT wrap it in markdown code fences or backticks. Do NOT add any explanation.
-Your entire response must be parseable directly by json.loads().
+# TODO: define the tool schema. This describes a function called "route_command"
+# with two parameters:
+# - "action": a string that must be one of a fixed set (use "enum" in JSON schema)
+# - "query": a string, allowed to be null/omitted
+TOOLS = [
+    {
+        "name": "route_command",
+        "description": "Routes a voice command to the correct action.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "enum": ["open_app", "search_google", "none"],
+                },
+                "query": {
+                    "type": ["string", "null"],
+                    "description": "App name for open_app, search terms for search_google, null for none",
+                },
+            },
+            "required": ["action", "query"],
+        },
+    }
+]
 
-{"action": "open_app" | "search_google" | "none", "query": string or null}
-
-- action must be one of: open_app, search_google, none
-- for open_app, query is the name of the app or site to open (e.g. "spotify", "youtube")
-- for search_google, query is the search terms
-- query is null only when action is "none"
-- if the text doesn't match any known action, use "none"
-"""
 
 def get_action(text: str) -> dict:
-    """Sends text to Claude, returns a dict like {"action": ..., "query": ...}."""
+    # TODO: call client.messages.create(...) same as before, but:
+    # - add tools=TOOLS
+    # - add tool_choice={"type": "tool", "name": "route_command"} to FORCE it to use this tool
+    #   (without this, Claude might choose not to use the tool at all)
+    response = client.messages.create(
+        model="claude-haiku-4-5",
+        max_tokens=100,
+        tools=TOOLS,
+        tool_choice={"type": "tool", "name": "route_command"},
+        messages=[{"role": "user", "content": text}],
+)
+    # TODO: find the tool_use block in response.content
+    # unlike before, response.content might have multiple blocks - loop through and
+    # find the one where block.type == "tool_use"
+    # that block's .input is ALREADY a dict - no json.loads() needed at all
+  
+    for block in response.content:
+        if(block.type=="tool_use"):
+            action_data = block.input
 
-    #1) Sends text to claude to return back dict
-    response = client.messages.create(model='claude-haiku-4-5',max_tokens=100,system=SYSTEM_PROMPT,messages= [{"role": "user", "content": text}])
-
-    #2) Strips leading json tag
-    raw_text = response.content[0].text
-    raw_text = raw_text.strip()
-    if raw_text.startswith("```"):
-        raw_text = raw_text.strip("`")       # remove backticks from both ends
-        raw_text = raw_text.replace("json", "", 1)  # remove the leading "json" language tag
-        raw_text = raw_text.strip()
-
-    #3) returns  the resulting dict
-    return json.loads(raw_text)
+    return action_data
