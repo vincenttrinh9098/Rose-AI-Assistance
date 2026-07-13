@@ -21,24 +21,22 @@ Given the user's spoken text, respond with ONLY a raw JSON object and nothing el
 Do NOT wrap it in markdown code fences or backticks. Do NOT add any explanation.
 Your entire response must be parseable directly by json.loads().
 
-{"action": "open_youtube" | "open_google" | "search_google" | "none", "query": string or null}
-...
+{"action": "open_app" | "search_google" | "none", "query": string or null}
+
+- action must be one of: open_app, search_google, none
+- for open_app, query is the name of the app or site to open (e.g. "spotify", "youtube")
+- for search_google, query is the search terms
+- query is null only when action is "none"
+- if the text doesn't match any known action, use "none"
 """
 
 def get_action(text: str) -> dict:
     """Sends text to Claude, returns a dict like {"action": ..., "query": ...}."""
 
-    # TODO: call client.messages.create(...)
-    # required args: model, max_tokens, system, messages
-    # - model: try "claude-haiku-4-5" (cheapest/fastest, plenty for this task)
-    # - max_tokens: keep this small, e.g. 100 - responses should be short JSON
-    # - system: SYSTEM_PROMPT
-    # - messages: [{"role": "user", "content": text}]
+    #1) Sends text to claude to return back dict
     response = client.messages.create(model='claude-haiku-4-5',max_tokens=100,system=SYSTEM_PROMPT,messages= [{"role": "user", "content": text}])
 
-    # TODO: the actual text Claude generated is nested inside the response object
-    # response.content is a list of content blocks - the first one has a .text attribute
-
+    #2) Strips leading json tag
     raw_text = response.content[0].text
     raw_text = raw_text.strip()
     if raw_text.startswith("```"):
@@ -46,5 +44,5 @@ def get_action(text: str) -> dict:
         raw_text = raw_text.replace("json", "", 1)  # remove the leading "json" language tag
         raw_text = raw_text.strip()
 
-    # TODO: parse raw_text as JSON using json.loads(), return the resulting dict
+    #3) returns  the resulting dict
     return json.loads(raw_text)

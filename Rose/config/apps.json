@@ -1,0 +1,187 @@
+{
+  "youtube": {
+    "type": "url",
+    "target": "https://youtube.com",
+    "aliases": ["youtube", "yt"]
+  },
+
+  "google": {
+    "type": "url",
+    "target": "https://google.com",
+    "aliases": ["google", "search"]
+  },
+
+  "gmail": {
+    "type": "url",
+    "target": "https://mail.google.com",
+    "aliases": ["gmail", "email", "mail"]
+  },
+
+  "github": {
+    "type": "url",
+    "target": "https://github.com",
+    "aliases": ["github", "git"]
+  },
+
+  "reddit": {
+    "type": "url",
+    "target": "https://reddit.com",
+    "aliases": ["reddit"]
+  },
+
+  "chatgpt": {
+    "type": "url",
+    "target": "https://chat.openai.com",
+    "aliases": ["chatgpt", "gpt", "openai"]
+  },
+
+  "netflix": {
+    "type": "url",
+    "target": "https://netflix.com",
+    "aliases": ["netflix"]
+  },
+
+  "amazon": {
+    "type": "url",
+    "target": "https://amazon.com",
+    "aliases": ["amazon"]
+  },
+
+  "linkedin": {
+    "type": "url",
+    "target": "https://linkedin.com",
+    "aliases": ["linkedin"]
+  },
+
+  "spotify": {
+    "type": "native_app",
+    "target": "spotify",
+    "aliases": ["spotify", "music"]
+  },
+
+  "discord": {
+    "type": "native_app",
+    "target": "discord",
+    "aliases": ["discord"]
+  },
+
+  "visual studio code": {
+    "type": "native_app",
+    "target": "code",
+    "aliases": ["vscode", "vs code", "visual studio code", "code"]
+  },
+
+  "chrome": {
+    "type": "native_app",
+    "target": "chrome",
+    "aliases": ["chrome", "google chrome"]
+  },
+
+  "firefox": {
+    "type": "native_app",
+    "target": "firefox",
+    "aliases": ["firefox"]
+  },
+
+  "edge": {
+    "type": "native_app",
+    "target": "msedge",
+    "aliases": ["edge", "microsoft edge"]
+  },
+
+  "safari": {
+    "type": "native_app",
+    "target": "Safari",
+    "aliases": ["safari"]
+  },
+
+  "terminal": {
+    "type": "native_app",
+    "target": "terminal",
+    "aliases": ["terminal", "command prompt", "cmd", "powershell"]
+  },
+
+  "finder": {
+    "type": "native_app",
+    "target": "Finder",
+    "aliases": ["finder"]
+  },
+
+  "file explorer": {
+    "type": "native_app",
+    "target": "explorer",
+    "aliases": ["file explorer", "explorer", "files"]
+  },
+
+  "notepad": {
+    "type": "native_app",
+    "target": "notepad",
+    "aliases": ["notepad"]
+  },
+
+  "notes": {
+    "type": "native_app",
+    "target": "Notes",
+    "aliases": ["notes", "apple notes"]
+  },
+
+  "calculator": {
+    "type": "native_app",
+    "target": "calculator",
+    "aliases": ["calculator", "calc"]
+  },
+
+  "calendar": {
+    "type": "native_app",
+    "target": "calendar",
+    "aliases": ["calendar"]
+  },
+
+  "steam": {
+    "type": "native_app",
+    "target": "steam",
+    "aliases": ["steam"]
+  },
+
+  "slack": {
+    "type": "native_app",
+    "target": "slack",
+    "aliases": ["slack"]
+  },
+
+  "zoom": {
+    "type": "native_app",
+    "target": "zoom",
+    "aliases": ["zoom"]
+  },
+
+  "teams": {
+    "type": "native_app",
+    "target": "teams",
+    "aliases": ["teams", "microsoft teams"]
+  },
+
+  "obs": {
+    "type": "native_app",
+    "target": "obs64",
+    "aliases": ["obs", "obs studio"]
+  },
+
+  "vlc": {
+    "type": "native_app",
+    "target": "vlc",
+    "aliases": ["vlc", "video player"]
+  },
+
+  "photoshop": {
+    "type": "native_app",
+    "target": "photoshop",
+    "aliases": ["photoshop", "adobe photoshop"]
+  },
+
+  "illustrator": {
+    "type": "native_app",
+    "target": "illustrator",
+    "aliases": ["illustrator", "adobe illustrator"]
+  }
+}

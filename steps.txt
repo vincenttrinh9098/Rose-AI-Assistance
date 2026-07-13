@@ -20,7 +20,10 @@ pip3 install -r requirements.txt
 
 ### /Commands
 * commands/browser.py:
-    Handles commands that have to do with browsers (open, search on google....)
+    Handles queries that have to do with browsers (open, search on google....)
+
+* commands/applications.py:
+    Handles all commands that have type [URL,native_apps] ( spotify, google, notes, discord,etc...)
     
 
 

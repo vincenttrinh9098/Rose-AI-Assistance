@@ -13,17 +13,6 @@ import platform
 os_name = platform.system()
 
 
-
-def open_youtube():
-    chrome = webbrowser.get("chrome")
-    chrome.open("https://www.youtube.com")
-
-
-
-def open_google():
-    chrome = webbrowser.get("chrome")
-    chrome.open("https://www.google.com")
-
 def search_google(query: str):
     # TODO: open a Google search URL with `query` appended
     # hint: Google search URLs look like https://google.com/search?q=YOUR+QUERY+HERE
