@@ -22,7 +22,7 @@ TOOLS = [
             "properties": {
                 "action": {
                     "type": "string",
-                    "enum": ["open_app", "search_google", "none"],
+                    "enum": ["open_app", "search_google", "click_element", "take_screenshot",  "none"],
                 },
                 "query": {
                     "type": ["string", "null"],

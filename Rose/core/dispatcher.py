@@ -8,6 +8,10 @@ from commands.applications import open_app
 from commands.browser import search_google
 from ai.llm import get_action
 
+from vision.locator import locate
+from vision.clicker import click_at
+from vision.screenshot import take_screenshot, take_screenshot_and_save
+
 def dispatch(text: str) -> str:
     result = get_action(text)
     action = result["action"]
@@ -23,6 +27,22 @@ def dispatch(text: str) -> str:
     if action == "open_app":
         confirm = open_app(query)
         return confirm
+    elif action == "take_screenshot":
+        path = take_screenshot_and_save()
+        print("Screenshot path is: ", path)
+        return "Took a screenshot"
+    elif action == "click_element":
+        path = take_screenshot()
+
+        result = locate(path,query)
+
+        # Step 3: check result["found"] - if False, return a "couldn't find that" message
+        if(result["found"]==False):
+            return "Couldn't find that"
+        click_at(result["x"], result["y"], path)
+
+        return "Clicking!"
+
     elif "search_google" in action:
         search_google(query)
         return "Searching on google.." 
