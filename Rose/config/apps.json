@@ -65,7 +65,18 @@
           "quit": "tell application \"Spotify\" to quit"
       }
   },
-
+"apple_music": {
+    "type": "native_app",
+    "target": "Music",
+    "aliases": ["apple music"],
+    "controls": {
+        "play": "tell application \"Music\" to play",
+        "pause": "tell application \"Music\" to pause",
+        "next": "tell application \"Music\" to next track",
+        "previous": "tell application \"Music\" to previous track",
+        "quit": "tell application \"Music\" to quit"
+    }
+},
   "discord": {
     "type": "native_app",
     "target": "discord",

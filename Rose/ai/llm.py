@@ -34,6 +34,8 @@ TOOLS = [
                         "add_calendar_event",
                         "list_todays_events",
                         "add_reminder",
+                        "add_note",
+                        "send_message",
                         "general_question",
                         "none",
                     ],
@@ -50,6 +52,8 @@ TOOLS = [
                         "add_calendar_event: the full original phrase describing the event, including any date/time/title details mentioned (e.g. 'dentist appointment next Tuesday at 3pm') - this gets parsed separately. "
                         "list_todays_events: the full original phrase describing the todays events listed,"
                         "add_reminder: the full original phrase describing the event, including any date/time/title details mentioned (e.g. 'dentist appointment next Tuesday at 3pm') - this gets parsed separately. "
+                        "add_note: full original phrase describing the notes"
+                        "send_message: null (use recipient and content instead)."
                         "general_question: any standalone question, opinion request, or "
                         "piece of advice that is NOT about the current screen or webpage. "
                         "take_screenshot / none: null."
@@ -63,8 +67,16 @@ TOOLS = [
                     "type": ["string", "null"],
                     "description": "The control to perform: play, pause, next, previous, or quit. Only used for control_app, otherwise null.",
                 },
+                "recipient": {
+                    "type": ["string", "null"],
+                    "description": "The full name of the person to message, as clearly as stated. Only used for send_message, otherwise null.",
+                },
+            "content": {
+                "type": ["string", "null"],
+                "description": "The message text to send. Only used for send_message, otherwise null.",
+                },
             },
-            "required": ["action", "query", "app_name", "control_action"],
+            "required": ["action", "query", "app_name", "control_action","recipient","content"],
         },
         "cache_control": None,
     }
