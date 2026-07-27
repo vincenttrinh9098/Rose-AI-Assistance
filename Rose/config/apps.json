@@ -54,9 +54,16 @@
   },
 
   "spotify": {
-    "type": "native_app",
-    "target": "spotify",
-    "aliases": ["spotify", "music"]
+      "type": "native_app",
+      "target": "Spotify",
+      "aliases": ["spotify", "music"],
+      "controls": {
+          "play": "tell application \"Spotify\" to play",
+          "pause": "tell application \"Spotify\" to pause",
+          "next": "tell application \"Spotify\" to next track",
+          "previous": "tell application \"Spotify\" to previous track",
+          "quit": "tell application \"Spotify\" to quit"
+      }
   },
 
   "discord": {

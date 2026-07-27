@@ -66,3 +66,36 @@ def open_app(name: str) -> str:
 
     # Step 4: return a confirmation string either way, e.g. f"Opening {name} for you"
     return f"Opening {name} for you"
+
+
+def control_app(name: str, control_action: str) -> str:
+    """
+    Looks up `name` in the config, finds the AppleScript command for `control_action`
+    (e.g. "play", "pause", "quit"), and runs it.
+    """
+
+    # TODO: use _find_app(name) same as open_app() does
+    app = _find_app(name) 
+
+    # TODO: if app is None, return "app not found" message
+    if app is None:
+        return "Sorry, I did not find that app within the system"
+
+
+    # TODO: check if app has a "controls" key at all, and if control_action exists within it
+    # (not every app in your config will have controls defined - browser-type apps won't)
+    # if missing, return a "that app doesn't support that control" message
+    # TODO: get the actual AppleScript string: app["controls"][control_action]
+
+    # TODO: run it with subprocess.run(["osascript", "-e", script])
+    # (same pattern as get_active_chrome_url())
+
+    controls = app.get("controls")
+    if controls is None or control_action not in controls:
+        return "that app doesn't support that control"
+
+    script = controls[control_action]
+    subprocess.run(["osascript", "-e", script])
+
+    # TODO: return a confirmation string, e.g. f"{control_action} on {name}"
+    return f"{control_action} on {name}"

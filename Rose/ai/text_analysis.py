@@ -3,8 +3,6 @@ analyze_text() - "understand this text" functions
 """
 
 import os
-from dotenv import load_dotenv
-from anthropic import Anthropic
 from ai.llm import client
 
 def analyze_text(text: str, question: str) -> str:
