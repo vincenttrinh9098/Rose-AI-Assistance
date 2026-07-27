@@ -1,4 +1,4 @@
-faster-whisper
+faster-whisper 
 sounddevice
 soundfile
 pyttsx3
@@ -6,3 +6,8 @@ openwakeword
 onnxruntime
 dotenv
 anthropic
+pyautogui 
+pillow
+requests 
+beautifulsoup4
+

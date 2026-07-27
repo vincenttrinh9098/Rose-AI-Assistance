@@ -9,7 +9,7 @@ from commands.browser import search_google,search_youtube
 from commands.browser_reader import get_page_text
 
 from ai.llm import get_action
-from ai.text_analysis import analyze_text
+from ai.text_analysis import analyze_text,general_question
 
 from vision.locator import locate
 from vision.clicker import click_at
@@ -55,6 +55,10 @@ def dispatch(text: str) -> str:
     elif action == "analyze_page":
         text = get_page_text()
         answer = analyze_text(text, query)
+        return answer
+    
+    elif action == "analyze_page":
+        answer = general_question(text)
         return answer
 
     elif "search_google" in action:
