@@ -22,11 +22,11 @@ TOOLS = [
             "properties": {
                 "action": {
                     "type": "string",
-                    "enum": ["open_app", "search_google", "click_element", "take_screenshot",  "none"],
+                    "enum": ["open_app", "search_google","search_youtube", "click_element", "take_screenshot","analyze_screen","analyze_page", "none"],
                 },
                 "query": {
                     "type": ["string", "null"],
-                    "description": "App name for open_app, search terms for search_google, null for none",
+                    "description": "App name for open_app, search terms for search_google/search_youtube, element description for click_element, question to ask for analyze_screen, question to ask for anaylze_page null for take_screenshot/none",
                 },
             },
             "required": ["action", "query"],
@@ -46,6 +46,7 @@ def get_action(text: str) -> dict:
         tools=TOOLS,
         tool_choice={"type": "tool", "name": "route_command"},
         messages=[{"role": "user", "content": text}],
+    
 )
     # TODO: find the tool_use block in response.content
     # unlike before, response.content might have multiple blocks - loop through and

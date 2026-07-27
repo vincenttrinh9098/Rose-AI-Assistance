@@ -21,3 +21,12 @@ def search_google(query: str):
     
     chrome = webbrowser.get("chrome")
     chrome.open(f"https://google.com/search?q={filtered_query}")
+
+def search_youtube(query: str):
+    # TODO: open a Google search URL with `query` appended
+    # hint: Google search URLs look like https://google.com/search?q=YOUR+QUERY+HERE
+    # you'll need to handle spaces in `query` somehow before building the URL string
+    filtered_query = query.replace(" ", "+")
+    
+    chrome = webbrowser.get("chrome")
+    chrome.open(f"https://youtube.com/results?search_query={filtered_query}")
