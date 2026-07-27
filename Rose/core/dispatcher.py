@@ -109,7 +109,7 @@ def dispatch(text: str) -> str:
     elif action == "take_screenshot":
         path = take_screenshot_and_save()
         print("Screenshot path is: ", path)
-        return "Took a screenshot"
+        return 
     
     elif action == "click_element":
         path = take_screenshot()
