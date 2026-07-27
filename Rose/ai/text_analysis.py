@@ -4,6 +4,7 @@ analyze_text() - "understand this text" functions
 
 import os
 from ai.llm import client
+from core.conversation import get_history, add_exchange
 
 def analyze_text(text: str, question: str) -> str:
     """Sends page text + a question to Claude, returns Claude's spoken-style answer."""
@@ -17,12 +18,12 @@ def analyze_text(text: str, question: str) -> str:
 
 def general_question(question: str) -> str:
     """Sends a general question to Claude, with web search enabled, returns a spoken-style answer."""
-
+    history = get_history()
     response = client.messages.create(
         model="claude-haiku-4-5",
         max_tokens=500,
         tools=[{"type": "web_search_20250305", "name": "web_search"}],
-        messages=[{"role": "user", "content": f"{question}\n\nAnswer in 2-4 natural spoken sentences, as if speaking out loud. No markdown formatting."}],
+        messages=history +[{"role": "user", "content": f"{question}\n\nAnswer in 2-4 natural spoken sentences, as if speaking out loud. No markdown formatting."}],
     )
 
 
@@ -31,5 +32,7 @@ def general_question(question: str) -> str:
         if block.type == "text":
             text_blocks.append(block.text)
     answer = " ".join(text_blocks)
+
+    add_exchange(question, answer)
 
     return answer

@@ -7,7 +7,8 @@ Takes transcribed text, asks Claude which action it maps to, calls the matching 
 from commands.applications import open_app, control_app
 from commands.browser import search_google,search_youtube
 from commands.browser_reader import get_page_text
-from commands.apple_calendar import add_event
+from commands.apple_calendar import add_calendar_event, list_todays_events
+from commands.reminders import add_reminder
 
 from ai.llm import get_action
 from ai.text_analysis import analyze_text,general_question
@@ -24,15 +25,37 @@ def dispatch(text: str) -> str:
     result = get_action(text)
     action = result["action"]
     query = result["query"]
-    app_name = result["app_name"]
-    control_action = result["control_action"]
+    app_name = result.get("app_name")
+    control_action = result.get("control_action")
 
+    #Commands
     if action == "open_app":
         confirm = open_app(query)
         return confirm
-    if action == "control_app":
-        return control_app(app_name, control_action)
     
+    elif action == "control_app":
+        return control_app(app_name, control_action)
+
+    elif "search_google" in action:
+        search_google(query)
+        return "Searching on google.." 
+    
+    elif "search_youtube" in action:
+        search_youtube(query)
+        return "Searching on youtube.." 
+    
+    elif action == "add_calendar_event":
+        event = extract_event(query)
+        return add_calendar_event(event["title"], event.get("date"), event.get("time"), event.get("duration_hours"))
+    
+    elif action == "list_todays_events":
+        return list_todays_events() 
+    
+    elif action == "add_reminder":
+        event = extract_event(query)
+        return add_reminder(event["title"], event.get("date"), event.get("time"))
+
+    #Vision
     elif action == "take_screenshot":
         path = take_screenshot_and_save()
         print("Screenshot path is: ", path)
@@ -55,22 +78,11 @@ def dispatch(text: str) -> str:
         text = get_page_text()
         answer = analyze_text(text, query)
         return answer
-    
+
+    #AI
     elif action == "general_question":
         answer = general_question(text)
         return answer
-    
-    elif action == "add_calendar_event":
-        event = extract_event(query)
-        return add_event(event["title"], event["date"], event["time"], event["duration_hours"])
-
-    elif "search_google" in action:
-        search_google(query)
-        return "Searching on google.." 
-    
-    elif "search_youtube" in action:
-        search_youtube(query)
-        return "Searching on youtube.." 
     
     else:
         return ("Sorry, I didn't quite get that...")

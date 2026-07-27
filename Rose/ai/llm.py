@@ -24,7 +24,6 @@ TOOLS = [
                     "type": "string",
                     "enum": [
                         "open_app",
-                        "control_app:",
                         "control_app",
                         "search_google",
                         "search_youtube",
@@ -33,6 +32,8 @@ TOOLS = [
                         "analyze_screen",
                         "analyze_page",
                         "add_calendar_event",
+                        "list_todays_events",
+                        "add_reminder",
                         "general_question",
                         "none",
                     ],
@@ -47,6 +48,8 @@ TOOLS = [
                         "analyze_screen: the question about what's visually on screen right now. "
                         "analyze_page: the question about the CURRENT webpage/article's content or text. "
                         "add_calendar_event: the full original phrase describing the event, including any date/time/title details mentioned (e.g. 'dentist appointment next Tuesday at 3pm') - this gets parsed separately. "
+                        "list_todays_events: the full original phrase describing the todays events listed,"
+                        "add_reminder: the full original phrase describing the event, including any date/time/title details mentioned (e.g. 'dentist appointment next Tuesday at 3pm') - this gets parsed separately. "
                         "general_question: any standalone question, opinion request, or "
                         "piece of advice that is NOT about the current screen or webpage. "
                         "take_screenshot / none: null."
@@ -61,7 +64,7 @@ TOOLS = [
                     "description": "The control to perform: play, pause, next, previous, or quit. Only used for control_app, otherwise null.",
                 },
             },
-            "required": ["action", "query"],
+            "required": ["action", "query", "app_name", "control_action"],
         },
         "cache_control": None,
     }
