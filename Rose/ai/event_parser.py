@@ -1,7 +1,7 @@
 
 
 from datetime import datetime
-from ai.llm import client
+from ai.client import client
 
 EVENT_TOOL = [
     {

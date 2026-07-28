@@ -2,85 +2,30 @@
 ai/llm.py - now using tool use / structured output instead of prompted JSON.
 """
 
-import os
-from dotenv import load_dotenv
-from anthropic import Anthropic
 
-load_dotenv()
-client = Anthropic()
+from ai.client import client
 
-# TODO: define the tool schema. This describes a function called "route_command"
-# with two parameters:
-# - "action": a string that must be one of a fixed set (use "enum" in JSON schema)
-# - "query": a string, allowed to be null/omitted
-TOOLS = [
-    {
+from plugins.registry import get_all_action_names, ALL_PLUGINS
+
+def build_tools_schema():
+    action_names = get_all_action_names() + ["none"]
+    query_description_parts = [f"{p.name}: {p.description}" for p in ALL_PLUGINS]
+
+    properties = {
+        "action": {"type": "string", "enum": action_names},
+        "query": {"type": ["string", "null"], "description": " ".join(query_description_parts)},
+    }
+    for p in ALL_PLUGINS:
+        properties.update(p.extra_fields)
+
+    return [{
         "name": "route_command",
         "description": "Routes a voice command to the correct action.",
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "action": {
-                    "type": "string",
-                    "enum": [
-                        "open_app",
-                        "control_app",
-                        "search_google",
-                        "search_youtube",
-                        "click_element",
-                        "take_screenshot",
-                        "analyze_screen",
-                        "analyze_page",
-                        "add_calendar_event",
-                        "list_todays_events",
-                        "add_reminder",
-                        "add_note",
-                        "send_message",
-                        "general_question",
-                        "none",
-                    ],
-                },
-                "query": {
-                    "type": ["string", "null"],
-                    "description": (
-                        "open_app: the app or site name. "
-                        "control_app: null (use app_name and control_action instead). "
-                        "search_google / search_youtube: the search terms. "
-                        "click_element: a description of the on-screen element to click. "
-                        "analyze_screen: the question about what's visually on screen right now. "
-                        "analyze_page: the question about the CURRENT webpage/article's content or text. "
-                        "add_calendar_event: the full original phrase describing the event, including any date/time/title details mentioned (e.g. 'dentist appointment next Tuesday at 3pm') - this gets parsed separately. "
-                        "list_todays_events: the full original phrase describing the todays events listed,"
-                        "add_reminder: the full original phrase describing the event, including any date/time/title details mentioned (e.g. 'dentist appointment next Tuesday at 3pm') - this gets parsed separately. "
-                        "add_note: full original phrase describing the notes"
-                        "send_message: null (use recipient and content instead)."
-                        "general_question: any standalone question, opinion request, or "
-                        "piece of advice that is NOT about the current screen or webpage. "
-                        "take_screenshot / none: null."
-                    ),
-                },
-                "app_name": {
-                    "type": ["string", "null"],
-                    "description": "The app to control (e.g. 'spotify'). Only used for control_app, otherwise null.",
-                },
-                "control_action": {
-                    "type": ["string", "null"],
-                    "description": "The control to perform: play, pause, next, previous, or quit. Only used for control_app, otherwise null.",
-                },
-                "recipient": {
-                    "type": ["string", "null"],
-                    "description": "The full name of the person to message, as clearly as stated. Only used for send_message, otherwise null.",
-                },
-            "content": {
-                "type": ["string", "null"],
-                "description": "The message text to send. Only used for send_message, otherwise null.",
-                },
-            },
-            "required": ["action", "query", "app_name", "control_action","recipient","content"],
-        },
-        "cache_control": None,
-    }
-]
+        "input_schema": {"type": "object", "properties": properties, "required": list(properties.keys())},
+    }]
+
+TOOLS = build_tools_schema()
+
 
 DISAMBIGUATION_RULES = """
 When choosing between analyze_screen, analyze_page, and general_question:

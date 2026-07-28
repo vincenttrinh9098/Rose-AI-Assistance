@@ -10,10 +10,6 @@ import subprocess
 import webbrowser
 
 APPS_CONFIG_PATH = "config/apps.json"
-
-# TODO: load the JSON config once here, at import time (same pattern as _model in audio_io.py -
-# don't re-read the file from disk on every single call)
-# json.load(open(path)) reads and parses a JSON file into a Python dict in one step
 _apps = json.load(open(APPS_CONFIG_PATH))
 
 
@@ -44,27 +40,16 @@ def open_app(name: str) -> str:
     Returns a string to be spoken back to the user.
     """
 
-    # Step 1: use _find_app() to look up the app
     app = _find_app(name) 
-
-    # Step 2: handle the "not found" case first
-    # if app is None, return a string saying you don't know that app
     if app is None:
         return "Sorry, I did not find that app within the system"
-    
-    # Step 3: branch on app["type"]
-    # - if "url": use webbrowser.open(app["target"])
-    # - if "native_app": use subprocess.run(["open", "-a", app["target"]])
-    #   ("open -a AppName" is the macOS command to launch an installed application by name)
+
 
     if(app['type'] == 'url'):
         webbrowser.open(app["target"])
     elif(app['type'] == 'native_app'):
         subprocess.run(["open", "-a", app["target"]])
 
-
-
-    # Step 4: return a confirmation string either way, e.g. f"Opening {name} for you"
     return f"Opening {name} for you"
 
 

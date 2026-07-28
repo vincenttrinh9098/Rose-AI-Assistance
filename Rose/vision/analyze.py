@@ -6,7 +6,7 @@ in the image, returns Claude's natural-language answer as plain text.
 """
 
 import base64
-from ai.llm import client
+from ai.client import client
 
 
 def analyze_screen(image_path: str, question: str) -> str:

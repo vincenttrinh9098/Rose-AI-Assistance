@@ -5,7 +5,7 @@ asks Claude to locate it, returns pixel coordinates.
 """
 
 import base64
-from ai.llm import client 
+from ai.client import client
 
 LOCATE_TOOL = [
     {

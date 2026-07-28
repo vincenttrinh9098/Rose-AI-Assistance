@@ -3,7 +3,7 @@ analyze_text() - "understand this text" functions
 """
 
 import os
-from ai.llm import client
+from ai.client import client
 from core.conversation import get_history, add_exchange
 
 def analyze_text(text: str, question: str) -> str:
