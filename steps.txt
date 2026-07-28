@@ -50,3 +50,14 @@ Works for apple:
 ./commands/notes.py:import subprocess
 ./commands/messages.py:import subprocess
 ./commands/browser_reader.py:import subprocess
+
+
+
+To launch:
+launchctl unload ~/Library/LaunchAgents/com.vincenttrinh.rose.plist
+cp com.vincenttrinh.rose.plist ~/Library/LaunchAgents/
+
+launchctl load ~/Library/LaunchAgents/com.vincenttrinh.rose.plist
+
+confirm its running:
+launchctl list | grep rose

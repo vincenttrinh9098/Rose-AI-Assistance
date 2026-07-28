@@ -7,8 +7,19 @@
 
     <key>ProgramArguments</key>
     <array>
-        <string>/Users/vintrinh/Desktop/vincent_personal_projects/Rose-AI-Assistance/Rose/run_rose.sh</string>
+        <string>/opt/homebrew/Cellar/python@3.12/3.12.12_2/Frameworks/Python.framework/Versions/3.12/bin/python3.12</string>
+        <string>-u</string>
+        <string>/Users/vintrinh/Desktop/vincent_personal_projects/Rose-AI-Assistance/Rose/main.py</string>
     </array>
+    
+    <key>WorkingDirectory</key>
+    <string>/Users/vintrinh/Desktop/vincent_personal_projects/Rose-AI-Assistance/Rose</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PYTHONPATH</key>
+        <string>/Users/vintrinh/Desktop/vincent_personal_projects/Rose-AI-Assistance/Rose/venv/lib/python3.12/site-packages</string>
+    </dict>
 
     <key>RunAtLoad</key>
     <true/>

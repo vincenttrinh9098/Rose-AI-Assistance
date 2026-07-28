@@ -4,32 +4,31 @@ main.py
 Now with real commands: record -> transcribe -> dispatch -> speak the result.
 """
 
+
+"""
+main.py - hotkey-triggered voice assistant, suitable for background/launchd operation.
+"""
+
+from pynput import keyboard
 from core.audio_io import record_and_transcribe, speak
 from core.dispatcher import dispatch
-#from core.wake_word import listen_for_wake_word
 
 
-def main():
-    print("Rose loopback test. Press Enter to record, Ctrl+C to quit.")
-    
-    while True:
-        input()
-        #listen_for_wake_word()
-        #speak("Yes?") 
-
+def on_activate():
+    try:
+        #print("Hotkey pressed - listening...")
         result = record_and_transcribe()
-        print(result)
-
-        if result == '':
-            speak("Error no message")
-            continue
-        else:
-            # Step 1: instead of speaking `result` directly (the raw transcription),
-            # pass it into dispatch() to get back a response string, then speak THAT
-            response = dispatch(result)
-            # speak(response)
-            print(response)
+        print("You:", result)
+        if not result:
+            speak("I didn't catch that")
+            return
+        response = dispatch(result)
+        print("Rose:", response)
+        speak(response)
+    except Exception as e:
+        print("ERROR in on_activate:", e)
 
 
-if __name__ == "__main__":
-    main()
+hotkey = keyboard.GlobalHotKeys({'<cmd>+<shift>+0': on_activate})
+hotkey.start()
+hotkey.join()
