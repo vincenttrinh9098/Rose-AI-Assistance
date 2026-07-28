@@ -1,0 +1,7 @@
+{
+  "google": "https://google.com/search?q={query}",
+  "youtube": "https://youtube.com/results?search_query={query}",
+  "walmart": "https://walmart.com/search?q={query}",
+  "amazon": "https://amazon.com/s?k={query}",
+  "robinhood": "https://robinhood.com/stocks/{query}"
+}

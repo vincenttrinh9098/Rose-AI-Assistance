@@ -1,32 +1,26 @@
 """
 commands/browser.py
-
 Functions that open things in the browser.
-Each function should do ONE thing - the dispatcher decides *when* to call it,
 this file only knows *how*.
 """
 
 import webbrowser
 import platform
 
+import webbrowser
+import json
 
-os_name = platform.system()
+with open("config/search_sites.json") as f:
+    _sites = json.load(f)
 
 
-def search_google(query: str):
-    # TODO: open a Google search URL with `query` appended
-    # hint: Google search URLs look like https://google.com/search?q=YOUR+QUERY+HERE
-    # you'll need to handle spaces in `query` somehow before building the URL string
+def search_site(site: str, query: str) -> str:
+    """Searches `site` (looked up in config/search_sites.json) for `query`."""
+    url_pattern = _sites.get(site.lower())
+
+    if url_pattern is None:
+        return f"I don't know how to search {site}"
+
     filtered_query = query.replace(" ", "+")
-    
-    chrome = webbrowser.get("chrome")
-    chrome.open(f"https://google.com/search?q={filtered_query}")
-
-def search_youtube(query: str):
-    # TODO: open a Google search URL with `query` appended
-    # hint: Google search URLs look like https://google.com/search?q=YOUR+QUERY+HERE
-    # you'll need to handle spaces in `query` somehow before building the URL string
-    filtered_query = query.replace(" ", "+")
-    
-    chrome = webbrowser.get("chrome")
-    chrome.open(f"https://youtube.com/results?search_query={filtered_query}")
+    webbrowser.open(url_pattern.format(query=filtered_query))
+    return f"Searching {site} for {query}"

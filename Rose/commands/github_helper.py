@@ -16,6 +16,19 @@ HEADERS = {"Authorization": f"Bearer {TOKEN}"}
 with open("config/github_repos.json") as f:
     _repos = json.load(f)
 
+import webbrowser
+
+def open_repo(name: str) -> str:
+    """Opens a specific GitHub repo in the browser, looked up by name."""
+    repo = _repos.get(name.lower())
+
+    if repo is None:
+        return f"I don't know a repo called {name}"
+
+    webbrowser.open(f"https://github.com/{repo}")
+    return f"Opening {name} on GitHub"
+
+
 def list_open_prs(name: str) -> str:
     """Lists open PRs for a repo, looked up by name in config/github_repos.json."""
 

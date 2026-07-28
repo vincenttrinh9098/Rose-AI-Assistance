@@ -16,6 +16,19 @@ def analyze_text(text: str, question: str) -> str:
 )
     return response.content[0].text
 
+
+def guess_url(site_name: str) -> str | None:
+    """Asks Claude for the most likely URL for a well-known site/service by name."""
+    response = client.messages.create(
+        model="claude-haiku-4-5",
+        max_tokens=50,
+        messages=[{"role": "user", "content": f"What is the exact homepage URL for '{site_name}'? Respond with ONLY the URL, nothing else. If you're not confident, respond with 'UNKNOWN'."}],
+    )
+    text = response.content[0].text.strip()
+    if text == "UNKNOWN" or not text.startswith("http"):
+        return None
+    return text
+
 def general_question(question: str) -> str:
     """Sends a general question to Claude, with web search enabled, returns a spoken-style answer."""
     history = get_history()

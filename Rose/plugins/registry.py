@@ -1,23 +1,23 @@
 from plugins.notes_plugin import AddNotePlugin
-from plugins.calendar_plugin import AddCalendarEventPlugin, ListTodaysEventsPlugin
+from plugins.calendar_plugin import AddAppleCalendarEventPlugin, ListEventsPlugin,AddGoogleCalendarEventPlugin,ListGoogleEventsPlugin
 from plugins.reminders_plugin import AddReminderPlugin
-from plugins.browser_plugin import OpenAppPlugin, SearchGooglePlugin, SearchYoutubePlugin
+from plugins.browser_plugin import OpenAppPlugin, SearchSitePlugin 
 from plugins.app_control_plugin import ControlAppPlugin
 from plugins.messages_plugin import SendMessagePlugin
 from plugins.vision_plugin import TakeScreenshotPlugin, ClickElementPlugin, AnalyzeScreenPlugin, AnalyzePagePlugin
 from plugins.general_question_plugin import GeneralQuestionPlugin
 from plugins.steam_plugin import LaunchGamePlugin
 from plugins.vscode_plugin import OpenProjectPlugin
-from plugins.github_plugin import ListPRsPlugin
-
+from plugins.github_plugin import ListPRsPlugin, OpenRepoPlugin
 ALL_PLUGINS = [
     AddNotePlugin(),
-    AddCalendarEventPlugin(),
-    ListTodaysEventsPlugin(),
+    AddAppleCalendarEventPlugin(),
+    ListEventsPlugin(),
+    AddGoogleCalendarEventPlugin(),
+    ListGoogleEventsPlugin(),
     AddReminderPlugin(),
     OpenAppPlugin(),
-    SearchGooglePlugin(),
-    SearchYoutubePlugin(),
+    SearchSitePlugin(),
     ControlAppPlugin(),
     SendMessagePlugin(),
     TakeScreenshotPlugin(),
@@ -27,6 +27,7 @@ ALL_PLUGINS = [
     GeneralQuestionPlugin(),
     LaunchGamePlugin(),
     OpenProjectPlugin(),
+    OpenRepoPlugin(),
     ListPRsPlugin(),
 ]
 

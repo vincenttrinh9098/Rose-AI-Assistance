@@ -201,5 +201,16 @@
     "type": "native_app",
     "target": "illustrator",
     "aliases": ["illustrator", "adobe illustrator"]
-  }
+  },
+  "robinhood": {
+    "type": "url",
+    "target": "https://robinhood.com",
+    "aliases": ["robinhood"]
+},
+"walmart": {
+    "type": "url",
+    "target": "https://walmart.com",
+    "aliases": ["walmart"]
+}
+
 }

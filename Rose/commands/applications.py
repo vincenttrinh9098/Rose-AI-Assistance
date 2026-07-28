@@ -9,6 +9,10 @@ import json
 import subprocess
 import webbrowser
 
+from ai.text_analysis import guess_url
+
+
+
 APPS_CONFIG_PATH = "config/apps.json"
 _apps = json.load(open(APPS_CONFIG_PATH))
 
@@ -19,13 +23,10 @@ def _find_app(name: str) -> dict | None:
     entry in _apps by checking its "aliases" list. Returns the app's dict,
     or None if nothing matches.
     """
+    if name is None:
+        return None
     name = name.lower()
 
-    # TODO: loop over _apps.values() (each value is one app's dict, like the
-    # youtube/google/spotify entries in the JSON)
-    # for each app entry, check if `name` is in that entry's "aliases" list
-    # if it matches, return that entry
-    # if the loop finishes with no match, return None
     for app_name, app_info in _apps.items():
         if name in app_info['aliases']:
             return app_info
@@ -39,18 +40,25 @@ def open_app(name: str) -> str:
     Looks up `name` in the config and opens it the correct way based on its "type".
     Returns a string to be spoken back to the user.
     """
-
+    if not name:
+        return "I'm not sure what you want me to open"
+    
     app = _find_app(name) 
-    if app is None:
-        return "Sorry, I did not find that app within the system"
+
+    if app is not None:
+        if(app['type'] == 'url'):
+            webbrowser.open(app["target"])
+        elif(app['type'] == 'native_app'):
+            subprocess.run(["open", "-a", app["target"]])
+        return f"Opening {name} for you"
+
+    guessed_url = guess_url(name)
+    if guessed_url:
+        webbrowser.open(guessed_url)
+        return f"Opening {name}"
 
 
-    if(app['type'] == 'url'):
-        webbrowser.open(app["target"])
-    elif(app['type'] == 'native_app'):
-        subprocess.run(["open", "-a", app["target"]])
-
-    return f"Opening {name} for you"
+    
 
 
 def control_app(name: str, control_action: str) -> str:
