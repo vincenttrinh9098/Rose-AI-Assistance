@@ -31,3 +31,22 @@ pip3 install -r requirements.txt
 ### /Ai 
 * /ai/llm.py
     Handles parsed text from dispatch.py -> claude restructures into json format after understanding user intent 
+
+
+
+
+Works for apple:
+- reminders
+- calendar 
+- subprocess open up native apps, files:
+
+
+./commands/applescript.py:import subprocess
+./commands/files.py:import subprocess
+./commands/applications.py:import subprocess
+./commands/reminders.py:import subprocess
+./commands/vscode.py:import subprocess
+./commands/apple_calendar.py:import subprocess
+./commands/notes.py:import subprocess
+./commands/messages.py:import subprocess
+./commands/browser_reader.py:import subprocess

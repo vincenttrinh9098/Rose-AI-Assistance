@@ -5,8 +5,14 @@ commands/steam.py
 import webbrowser
 import json
 
-with open("config/steam_games.json") as f:
-    _games = json.load(f)
+APPS_CONFIG_PATH = "config/steam_games.json"
+
+try:
+    with open(APPS_CONFIG_PATH) as f:
+        _games = json.load(f)
+except (FileNotFoundError, json.JSONDecodeError) as e:
+    print(f"Warning: couldn't load {APPS_CONFIG_PATH}: {e}")
+    _games = {}
 
 
 def launch_game(name: str) -> str:

@@ -23,8 +23,12 @@ EVENT_TOOL = [
                     "type": "number",
                     "description": "How long the event lasts, in hours. Default to 1 if not mentioned.",
                 },
+                "has_details": {
+                    "type": "boolean",
+                    "description": "True if the user's message contained actual event details (a title, activity, or purpose). False if the message was vague or contained no real event information.",
+                },
             },
-            "required": ["title", "date", "time", "duration_hours"],
+            "required": ["title", "date", "time", "duration_hours", "has_details"],
         },
     }
 ]

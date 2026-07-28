@@ -10,8 +10,16 @@ import platform
 import webbrowser
 import json
 
-with open("config/search_sites.json") as f:
-    _sites = json.load(f)
+
+APPS_CONFIG_PATH = "config/search_sites.json"
+
+try:
+    with open(APPS_CONFIG_PATH) as f:
+        _sites = json.load(f)
+except (FileNotFoundError, json.JSONDecodeError) as e:
+    print(f"Warning: couldn't load {APPS_CONFIG_PATH}: {e}")
+    _sites = {}
+
 
 
 def search_site(site: str, query: str) -> str:

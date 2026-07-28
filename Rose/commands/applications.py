@@ -10,11 +10,17 @@ import subprocess
 import webbrowser
 
 from ai.text_analysis import guess_url
-
+from commands.steam import launch_game
 
 
 APPS_CONFIG_PATH = "config/apps.json"
-_apps = json.load(open(APPS_CONFIG_PATH))
+
+try:
+    with open(APPS_CONFIG_PATH) as f:
+        _apps = json.load(f)
+except (FileNotFoundError, json.JSONDecodeError) as e:
+    print(f"Warning: couldn't load {APPS_CONFIG_PATH}: {e}")
+    _apps = {}
 
 
 def _find_app(name: str) -> dict | None:
@@ -36,26 +42,27 @@ def _find_app(name: str) -> dict | None:
 
 
 def open_app(name: str) -> str:
-    """
-    Looks up `name` in the config and opens it the correct way based on its "type".
-    Returns a string to be spoken back to the user.
-    """
     if not name:
         return "I'm not sure what you want me to open"
-    
-    app = _find_app(name) 
 
+    app = _find_app(name)
     if app is not None:
-        if(app['type'] == 'url'):
+        if app['type'] == 'url':
             webbrowser.open(app["target"])
-        elif(app['type'] == 'native_app'):
+        elif app['type'] == 'native_app':
             subprocess.run(["open", "-a", app["target"]])
         return f"Opening {name} for you"
+
+    steam_result = launch_game(name)
+    if "couldn't find" not in steam_result.lower():
+        return steam_result
 
     guessed_url = guess_url(name)
     if guessed_url:
         webbrowser.open(guessed_url)
         return f"Opening {name}"
+
+    return f"Sorry, I couldn't find or open {name}"
 
 
     

@@ -40,18 +40,24 @@ When choosing between analyze_screen, analyze_page, and general_question:
 """
 
 def get_action(text: str) -> dict:
+    if not text or not text.strip():
+        return {"action": "none", "query": None}
 
-    response = client.messages.create(
-        model="claude-haiku-4-5",
-        max_tokens=100,
-        tools=TOOLS,
-        system=DISAMBIGUATION_RULES,
-        tool_choice={"type": "tool", "name": "route_command"},
-        messages=[{"role": "user", "content": text}],
+    try:
+        response = client.messages.create(
+            model="claude-haiku-4-5",
+            max_tokens=100,
+            tools=TOOLS,
+            system=DISAMBIGUATION_RULES,
+            tool_choice={"type": "tool", "name": "route_command"},
+            messages=[{"role": "user", "content": text}],
+        )
+    except Exception as e:
+        print(f"get_action() failed: {e}")
+        return {"action": "offline", "query": None}
 
-    )  
     for block in response.content:
-        if(block.type=="tool_use"):
-            action_data = block.input
+        if block.type == "tool_use":
+            return block.input
 
-    return action_data
+    return {"action": "none", "query": None}

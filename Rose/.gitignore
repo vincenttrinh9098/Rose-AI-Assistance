@@ -4,3 +4,5 @@ __pycache__/
 venv/
 config/google_credentials.json
 config/google_token.json
+logs/s
+screenshots/

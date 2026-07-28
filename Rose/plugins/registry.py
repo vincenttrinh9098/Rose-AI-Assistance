@@ -6,9 +6,11 @@ from plugins.app_control_plugin import ControlAppPlugin
 from plugins.messages_plugin import SendMessagePlugin
 from plugins.vision_plugin import TakeScreenshotPlugin, ClickElementPlugin, AnalyzeScreenPlugin, AnalyzePagePlugin
 from plugins.general_question_plugin import GeneralQuestionPlugin
-from plugins.steam_plugin import LaunchGamePlugin
 from plugins.vscode_plugin import OpenProjectPlugin
 from plugins.github_plugin import ListPRsPlugin, OpenRepoPlugin
+from plugins.files_plugin import FindFilePlugin
+
+
 ALL_PLUGINS = [
     AddNotePlugin(),
     AddAppleCalendarEventPlugin(),
@@ -25,10 +27,10 @@ ALL_PLUGINS = [
     AnalyzeScreenPlugin(),
     AnalyzePagePlugin(),
     GeneralQuestionPlugin(),
-    LaunchGamePlugin(),
     OpenProjectPlugin(),
     OpenRepoPlugin(),
     ListPRsPlugin(),
+    FindFilePlugin()
 ]
 
 _by_name = {p.name: p for p in ALL_PLUGINS}

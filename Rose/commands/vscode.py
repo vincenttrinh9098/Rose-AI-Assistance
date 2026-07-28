@@ -5,8 +5,15 @@ commands/vscode.py
 import subprocess
 import json
 
-with open("config/projects.json") as f:
-    _projects = json.load(f)
+
+APPS_CONFIG_PATH = "config/projects.json"
+
+try:
+    with open(APPS_CONFIG_PATH) as f:
+        _projects = json.load(f)
+except (FileNotFoundError, json.JSONDecodeError) as e:
+    print(f"Warning: couldn't load {APPS_CONFIG_PATH}: {e}")
+    _projects = {}
 
 
 def open_project(name: str) -> str:

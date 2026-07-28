@@ -13,8 +13,14 @@ load_dotenv()
 TOKEN = os.getenv("GITHUB_TOKEN")
 HEADERS = {"Authorization": f"Bearer {TOKEN}"}
 
-with open("config/github_repos.json") as f:
-    _repos = json.load(f)
+APPS_CONFIG_PATH = "config/github_repos.json"
+
+try:
+    with open(APPS_CONFIG_PATH) as f:
+        _repos = json.load(f)
+except (FileNotFoundError, json.JSONDecodeError) as e:
+    print(f"Warning: couldn't load {APPS_CONFIG_PATH}: {e}")
+    _repos = {}
 
 import webbrowser
 

@@ -14,6 +14,8 @@ class AddAppleCalendarEventPlugin(Plugin):
 
     def handle(self, query: str, **kwargs) -> str:
         event = extract_event(query)
+        if not event.get("has_details"):
+            return "What event would you like to add, and when?"
         return add_apple_calendar_event(event["title"], event.get("date"), event.get("time"), event.get("duration_hours"))
 
 
@@ -28,6 +30,8 @@ class AddGoogleCalendarEventPlugin(Plugin):
 
     def handle(self, query: str, **kwargs) -> str:
         event = extract_event(query)
+        if not event.get("has_details"):
+            return "What event would you like to add, and when?"
         return add_google_calendar_event(event["title"], event.get("date"), event.get("time"), event.get("duration_hours"))
 
 

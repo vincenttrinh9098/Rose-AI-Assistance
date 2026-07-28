@@ -10,4 +10,6 @@ class AddReminderPlugin(Plugin):
 
     def handle(self, query: str, **kwargs) -> str:
         event = extract_event(query)
+        if not event.get("has_details"):
+            return "What would you like me to remind you about?"
         return add_reminder(event["title"], event.get("date"), event.get("time"))
