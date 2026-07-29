@@ -61,3 +61,6 @@ launchctl load ~/Library/LaunchAgents/com.vincenttrinh.rose.plist
 
 confirm its running:
 launchctl list | grep rose
+
+Check logs:
+tail -f logs/rose.log        

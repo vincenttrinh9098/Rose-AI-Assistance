@@ -4,7 +4,6 @@ ai/llm.py - now using tool use / structured output instead of prompted JSON.
 
 
 from ai.client import client
-
 from plugins.registry import get_all_action_names, ALL_PLUGINS
 
 def build_tools_schema():
@@ -24,7 +23,11 @@ def build_tools_schema():
         "input_schema": {"type": "object", "properties": properties, "required": list(properties.keys())},
     }]
 
+
+
+
 TOOLS = build_tools_schema()
+
 
 
 DISAMBIGUATION_RULES = """

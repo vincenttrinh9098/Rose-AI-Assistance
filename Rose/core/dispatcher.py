@@ -20,7 +20,6 @@ def dispatch(text: str) -> str:
     if not text or not text.strip():
         return "I didn't catch that"
 
-
     pending = get_pending()
             
     if pending is not None:
@@ -28,12 +27,23 @@ def dispatch(text: str) -> str:
             clear_pending()
             return "Okay, cancelled."
         if pending["type"] == "disambiguate_contact":
+            match = re.search(r"\d+", text)
+            if match:
+                index = int(match.group()) - 1
+                if 0 <= index < len(pending["matches"]):
+                    name = pending["matches"][index]
+                    set_pending("confirm_send", recipient=name, content=pending["content"])
+                    return f"Send '{pending['content']}' to {name}?"
+
             for name in pending["matches"]:
                 if _similarity(text, name) > 0.7:
                     set_pending("confirm_send", recipient=name, content=pending["content"])
                     return f"Send '{pending['content']}' to {name}?"
-            return "I didn't catch which one - could you repeat the name?"
+
+            return "I didn't catch which one - could you repeat the name or say the number?"
+        
         elif pending["type"] == "disambiguate_file":
+            # Path 1: check for a spoken number first
             match = re.search(r"\d+", text)
             if match:
                 index = int(match.group()) - 1
@@ -41,8 +51,27 @@ def dispatch(text: str) -> str:
                     selected_path = pending["matches"][index]
                     clear_pending()
                     return open_file(selected_path)
+
+            # Path 2: no valid number - try fuzzy matching against filenames
+            for path in pending["matches"]:
+                filename = os.path.basename(path)
+                if _similarity(text, filename) > 0.5:
+                    clear_pending()
+                    return open_file(path)
+
+            # Path 3: neither worked - check if this is actually a new command
+            check = get_action(text)
+            if check.get("action") not in (None, "none"):
+                clear_pending()
+                action = check.get("action")
+                query = check.get("query")
+                plugin = get_plugin(action)
+                if plugin is not None:
+                    extra_kwargs = {field: check.get(field) for field in plugin.extra_fields}
+                    return plugin.handle(query, **extra_kwargs)
+
             return "Which number did you mean?"
-    
+
         elif pending["type"] == "confirm_send":
             if "yes" in text.lower() or "yeah" in text.lower():
                 answer = send_message(pending.get("recipient"), pending.get("content"))

@@ -14,7 +14,14 @@ class OpenAppPlugin(Plugin):
 
 class SearchSitePlugin(Plugin):
     name = "search_site"
-    description = "Searches a specific site (e.g. google, youtube, walmart, amazon) for the given terms."
+    
+    description = (
+        "ONLY use this when the user explicitly wants to open search results in their "
+        "browser (e.g. 'search google for X', 'look up X on youtube'). "
+        "Do NOT use this for questions, news requests, or anything where the user wants "
+        "a spoken answer - use general_question instead for those."
+    )
+
     extra_fields = {
         "site": {"type": ["string", "null"], "description": "The site to search on. Only used for search_site."},
     }

@@ -169,7 +169,7 @@
 
   "zoom": {
     "type": "native_app",
-    "target": "zoom",
+    "target": "zoom.us",
     "aliases": ["zoom"]
   },
 
@@ -211,6 +211,11 @@
     "type": "url",
     "target": "https://walmart.com",
     "aliases": ["walmart"]
+},
+"roblox": {
+    "type": "native_app",
+    "target": "roblox",
+    "aliases": ["war blocks", "warblocks"]
 }
 
 }

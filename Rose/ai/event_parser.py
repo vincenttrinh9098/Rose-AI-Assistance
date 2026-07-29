@@ -109,6 +109,8 @@ def extract_event(text: str) -> dict:
 
     for block in response.content:
         if block.type == "tool_use":
-            event_data = block.input
+            event = block.input
+            event["has_details"] = bool(event.get("title")) and event["title"].strip().lower() not in ("unknown", "event", "reminder", "")
+            return event
 
-    return event_data
+    return "empty"

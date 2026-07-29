@@ -65,7 +65,6 @@ def open_app(name: str) -> str:
     return f"Sorry, I couldn't find or open {name}"
 
 
-    
 
 
 def control_app(name: str, control_action: str) -> str:

@@ -9,6 +9,7 @@ from plugins.general_question_plugin import GeneralQuestionPlugin
 from plugins.vscode_plugin import OpenProjectPlugin
 from plugins.github_plugin import ListPRsPlugin, OpenRepoPlugin
 from plugins.files_plugin import FindFilePlugin
+from plugins.steam_plugin import LaunchGamePlugin
 
 
 ALL_PLUGINS = [
@@ -29,6 +30,7 @@ ALL_PLUGINS = [
     GeneralQuestionPlugin(),
     OpenProjectPlugin(),
     OpenRepoPlugin(),
+    LaunchGamePlugin(),
     ListPRsPlugin(),
     FindFilePlugin()
 ]

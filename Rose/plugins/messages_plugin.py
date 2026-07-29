@@ -10,7 +10,7 @@ class SendMessagePlugin(Plugin):
         "recipient": {"type": ["string", "null"], "description": "Name of the person to message. Only used for send_message."},
         "content": {"type": ["string", "null"], "description": "The message text. Only used for send_message."},
     }
-
+    
     def handle(self, query: str, recipient: str = None, content: str = None, **kwargs) -> str:
         if not content or not recipient:
             return "Who should I send it to, and what should it say?"
@@ -23,4 +23,5 @@ class SendMessagePlugin(Plugin):
             return f"Is {matches[0]} the correct person?"
         else:
             set_pending("disambiguate_contact", matches=matches, content=content)
-            return f"I found a few matches: {', '.join(matches)}. Which one did you mean?"
+            numbered = [f"{i+1}. {name}" for i, name in enumerate(matches)]
+            return f"I found a few matches: {'. '.join(numbered)}. Which one, or say the number?"
