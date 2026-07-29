@@ -3,13 +3,12 @@ commands/notes.py
 """
 
 import subprocess
+from commands.applescript import run_applescript
 
 
 def add_note(content: str) -> str:
     """Creates a new note in Notes.app with the given content."""
-    # TODO: build the AppleScript - "tell application "Notes"" then
-    # "make new note with properties {body:"..."}"
-    # (Notes uses "body" as the property name, not "name" or "summary")
+
     script = f'''
     tell application "Notes"
         tell folder "Notes"
@@ -17,11 +16,10 @@ def add_note(content: str) -> str:
         end tell
     end tell
     '''
-    result = subprocess.run(["osascript", "-e", script], capture_output=True, text=True)
 
-    if result.returncode != 0:
-        print(result.stderr)
+
+    success, output = run_applescript(script, app_name="Notes")
+    if not success:
+        print(output)
         return "Sorry, I couldn't add your notes"
-
-
     return "Succesfully added to notes"

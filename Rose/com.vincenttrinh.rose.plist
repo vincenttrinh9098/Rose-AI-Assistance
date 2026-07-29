@@ -7,7 +7,7 @@
 
     <key>ProgramArguments</key>
     <array>
-        <string>/opt/homebrew/Cellar/python@3.12/3.12.12_2/Frameworks/Python.framework/Versions/3.12/bin/python3.12</string>
+        <string>/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/bin/python3.12</string>
         <string>-u</string>
         <string>/Users/vintrinh/Desktop/vincent_personal_projects/Rose-AI-Assistance/Rose/main.py</string>
     </array>

@@ -10,6 +10,7 @@ from core.pending_action import get_pending, set_pending, clear_pending
 from plugins.registry import get_plugin
 from difflib import SequenceMatcher
 import re
+import os
 
 from commands.files import search_files,open_file
 

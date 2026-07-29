@@ -20,7 +20,7 @@ class SendMessagePlugin(Plugin):
             return "I couldn't find that contact"
         elif len(matches) == 1:
             set_pending("confirm_send", recipient=matches[0], content=content)
-            return f"Is {matches[0]} the correct person?"
+            return f"Send '{content}' to {matches[0]}, is that correct?"
         else:
             set_pending("disambiguate_contact", matches=matches, content=content)
             numbered = [f"{i+1}. {name}" for i, name in enumerate(matches)]

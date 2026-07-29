@@ -21,53 +21,61 @@ from datetime import datetime, timedelta
 def add_google_calendar_event(title: str, date: str, time: str, duration_hours: float) -> str:
     """Adds an event to the user's primary Google Calendar."""
 
-    creds = _get_credentials()
-    service = build("calendar", "v3", credentials=creds)
+    try:
+        creds = _get_credentials()
+        service = build("calendar", "v3", credentials=creds)
 
-    start_dt = datetime.strptime(f"{date} {time}", "%B %d, %Y %I:%M %p")
+        start_dt = datetime.strptime(f"{date} {time}", "%B %d, %Y %I:%M %p")
+        end_dt = start_dt + timedelta(hours=duration_hours)
 
-    end_dt = start_dt + timedelta(hours=duration_hours)
+        event = {
+            "summary": title,
+            "start": {"dateTime": start_dt.isoformat(), "timeZone": "America/Los_Angeles"},
+            "end": {"dateTime": end_dt.isoformat(), "timeZone": "America/Los_Angeles"},
+        }
 
-    event = {
-        "summary": title,
-        "start": {"dateTime": start_dt.isoformat(), "timeZone": "America/Los_Angeles"},
-        "end": {"dateTime": end_dt.isoformat(), "timeZone": "America/Los_Angeles"},
-    }
+        service.events().insert(calendarId="primary", body=event).execute()
 
-    created_event = service.events().insert(calendarId="primary", body=event).execute()
+    except Exception as e:
+        print(f"add_google_calendar_event() failed: {e}")
+        return "Sorry, I couldn't add that to your Google Calendar"
 
-    return f"Successfully added {title} to your Google Calendar"
-
-
+    return f"Successfully added {title} to your Google Calendar at {time} on {date}"
 
 def list_todays_google_events(date_str: str) -> str:
     """Returns a spoken-friendly summary of the date's Google Calendar events."""
 
-    creds = _get_credentials()
-    service = build("calendar", "v3", credentials=creds)
+    try:
+        creds = _get_credentials()
+        service = build("calendar", "v3", credentials=creds)
 
-    parsed_date = datetime.strptime(date_str, "%B %d, %Y")
-    start_of_day = datetime(parsed_date.year, parsed_date.month, parsed_date.day, 0, 0, 0).isoformat() + "Z"
-    end_of_day = datetime(parsed_date.year, parsed_date.month, parsed_date.day, 23, 59, 59).isoformat() + "Z"
+        parsed_date = datetime.strptime(date_str, "%B %d, %Y")
+        start_of_day = datetime(parsed_date.year, parsed_date.month, parsed_date.day, 0, 0, 0).isoformat() + "Z"
+        end_of_day = datetime(parsed_date.year, parsed_date.month, parsed_date.day, 23, 59, 59).isoformat() + "Z"
 
-    events_result = service.events().list(
-        calendarId="primary",
-        timeMin=start_of_day,
-        timeMax=end_of_day,
-        singleEvents=True,
-        orderBy="startTime",
-    ).execute()
+        events_result = service.events().list(
+            calendarId="primary",
+            timeMin=start_of_day,
+            timeMax=end_of_day,
+            singleEvents=True,
+            orderBy="startTime",
+        ).execute()
 
-    events = events_result.get("items", [])
+        events = events_result.get("items", [])
 
-    if not events:
-        return "You have no events for this date on Google Calendar"
+        if not events:
+            return "You have no events for this date on Google Calendar"
 
-    summaries = []
-    for event in events:
-        title = event.get("summary", "Untitled event")
-        start = event["start"].get("dateTime", event["start"].get("date"))
-        summaries.append(f"{title} at {start}")
+        summaries = []
+        for event in events:
+            title = event.get("summary", "Untitled event")
+            start = event["start"].get("dateTime", event["start"].get("date"))
+            summaries.append(f"{title} at {start}")
+
+    except Exception as e:
+        print(f"list_todays_google_events() failed: {e}")
+        return "Sorry, I couldn't list your events on Google Calendar"
+   
     return f"Here's what's on your calendar for {date_str}: {', '.join(summaries)}"
 
 

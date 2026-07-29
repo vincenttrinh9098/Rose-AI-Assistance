@@ -3,10 +3,13 @@ commands/messages.py
 """
 
 import subprocess
-
+from commands.applescript import run_applescript
+import time
 
 def send_message(recipient: str, content: str) -> str:
-    """Sends an iMessage to `recipient` (an exact Contacts full name) with `content`."""
+    subprocess.run(["open", "-a", "Contacts"])
+    subprocess.run(["open", "-a", "Messages"])
+    time.sleep(1)
 
     script = f'''
     tell application "Contacts"
@@ -21,14 +24,11 @@ def send_message(recipient: str, content: str) -> str:
     end tell
     '''
 
-    result = subprocess.run(["osascript", "-e", script], capture_output=True, text=True)
-
-    if result.returncode != 0:
-        print(result.stderr)
+    success, output = run_applescript(script)  # no single app_name, since we launched both manually above
+    if not success:
+        print(output)
         return "Sorry, I couldn't send that message"
-
     return "Successfully sent message"
-
 
 def find_contact_matches(name: str) -> list[str]:
     """Returns a list of full names in Contacts matching `name`."""
@@ -42,7 +42,7 @@ def find_contact_matches(name: str) -> list[str]:
         return nameList
     end tell
     '''
-    result = subprocess.run(["osascript", "-e", script], capture_output=True, text=True)
-    if not result.stdout.strip():
+    success, output = run_applescript(script, app_name="Contacts")
+    if not success or not output:
         return []
-    return [n.strip() for n in result.stdout.strip().split(",")]
+    return [n.strip() for n in output.split(",")]

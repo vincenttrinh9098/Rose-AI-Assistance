@@ -1,4 +1,5 @@
 import subprocess
+from commands.applescript import run_applescript
 
 
 def add_apple_calendar_event(title: str, date: str, time: str, duration_hours:float) -> str:
@@ -11,13 +12,10 @@ def add_apple_calendar_event(title: str, date: str, time: str, duration_hours:fl
         end tell
     end tell
     '''
-
-    result = subprocess.run(["osascript", "-e", script], capture_output=True, text=True)
-
-    if result.returncode != 0:
-        print(result.stderr)
+    success, output = run_applescript(script, app_name="Calendar")
+    if not success:
+        print(output)
         return "Sorry, I couldn't create that calendar event"
-
     return "Successfully made a calendar date for you"
 
 
@@ -40,13 +38,12 @@ def list_events_for_date(date_str: str) -> str:
     end tell
     '''
 
-    result = subprocess.run(["osascript", "-e", script], capture_output=True, text=True)
-
-    if result.returncode != 0:
-        print(result.stderr)
+    success, output = run_applescript(script, app_name="Calendar")
+    if not success:
+        print(output)
         return "Sorry, I couldn't check your calendar"
 
-    if not result.stdout.strip():
+    if not output.strip():
         return f"You have no apple calendar events on {date_str}"
 
-    return f"Here's what's on your calendar for {date_str}: {result.stdout.strip()}"
+    return f"Here's what's on your calendar for {date_str}: {output.strip()}"

@@ -1,6 +1,8 @@
 
 
 import subprocess
+from commands.applescript import run_applescript
+
 
 def add_reminder(title: str, date: str = None, time: str = None) -> str:
     if date and time:
@@ -20,10 +22,8 @@ def add_reminder(title: str, date: str = None, time: str = None) -> str:
         end tell
         '''
 
-    result = subprocess.run(["osascript", "-e", script], capture_output=True, text=True)
-
-    if result.returncode != 0:
-        print(result.stderr)
+    success, output = run_applescript(script, app_name="Reminders")
+    if not success:
+        print(output)
         return "Sorry, I couldn't make that reminder for you"
-
     return f"Added a reminder: {title}"
