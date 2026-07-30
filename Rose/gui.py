@@ -292,6 +292,7 @@ class RoseSettingsApp(ctk.CTk):
             "Steam Games": "config/steam_games.json",
             "VS Code Projects": "config/projects.json",
             "GitHub Repos": "config/github_repos.json",
+            "Search Sites": "config/search_sites.json",
         }
 
         # Which config file
@@ -336,6 +337,7 @@ class RoseSettingsApp(ctk.CTk):
             widget.destroy()
 
         is_apps_file = self._current_config_path.endswith("apps.json")
+        is_search_sites_file = self._current_config_path.endswith("search_sites.json")
         is_known_entry = selected_entry in self._current_config_data
         existing = self._current_config_data.get(selected_entry, {}) if is_known_entry else {}
 
@@ -359,13 +361,20 @@ class RoseSettingsApp(ctk.CTk):
             self.aliases_field.pack(pady=5, fill="x")
             if existing.get("aliases"):
                 self.aliases_field.insert(0, ", ".join(existing.get("aliases", [])))
-                
+    
+        elif is_search_sites_file:
+            self.value_field = ctk.CTkEntry(
+                self.form_frame,
+                placeholder_text="URL template with {query} placeholder, e.g. https://example.com/search?q={query}",
+            )
+            self.value_field.pack(pady=5, fill="x")
+            if existing and isinstance(existing, str):
+                self.value_field.insert(0, existing)
         else:
             self.value_field = ctk.CTkEntry(self.form_frame, placeholder_text="Identifier or path (e.g., 730 or /Applications/Steam.app)")
             self.value_field.pack(pady=5, fill="x")
             if existing and isinstance(existing, str):
                 self.value_field.insert(0, existing)
-
 
     def _save_entry(self):
         name = self.entry_name_field.get().strip().lower()
@@ -381,6 +390,7 @@ class RoseSettingsApp(ctk.CTk):
             return
 
         is_apps_file = self._current_config_path.endswith("apps.json")
+        is_search_sites_file = self._current_config_path.endswith("search_sites.json")
 
         if is_apps_file:
             target = self.target_field.get().strip()
@@ -400,26 +410,32 @@ class RoseSettingsApp(ctk.CTk):
                 "aliases": aliases or [name],
             }
         else:
-            value = self.value_field.get().strip()
-            if not value:
-                print("Value cannot be empty")
-                return
+                value = self.value_field.get().strip()
+                if not value:
+                    print("Value cannot be empty")
+                    return
 
-            if self._current_config_path.endswith("steam_games.json") and not value.isdigit():
-                print(f"Warning: '{value}' doesn't look like a valid Steam App ID (should be a number)")
-                return
+                if is_search_sites_file and "{query}" not in value:
+                    print("Warning: URL template must contain {query} as a placeholder")
+                    return
 
-            if self._current_config_path.endswith("github_repos.json") and "/" not in value:
-                print(f"Warning: '{value}' doesn't look like a valid repo (should be 'owner/repo')")
-                return
+                if self._current_config_path.endswith("steam_games.json") and not value.isdigit():
+                    print(f"Warning: '{value}' doesn't look like a valid Steam App ID (should be a number)")
+                    return
 
-            self._current_config_data[name] = value
+                if self._current_config_path.endswith("github_repos.json") and "/" not in value:
+                    print(f"Warning: '{value}' doesn't look like a valid repo (should be 'owner/repo')")
+                    return
+
+                self._current_config_data[name] = value
 
         with open(self._current_config_path, "w") as f:
             json.dump(self._current_config_data, f, indent=2)
 
         print(f"Saved '{name}' to {self._current_config_path}")
         self._on_config_selected(self.config_selector.get())
+
+
 
         
     def _delete_entry(self):
