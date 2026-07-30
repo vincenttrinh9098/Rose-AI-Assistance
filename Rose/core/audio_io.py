@@ -13,6 +13,8 @@ import numpy as np
 import json
 import platform
 import subprocess
+import threading
+import time
 
 SETTINGS_PATH = "config/settings.json"
 
@@ -27,6 +29,14 @@ _model = WhisperModel(model_size_or_path="tiny", device="cpu", compute_type="int
 _current_speech_process = None
 
 
+_cancel_recording = threading.Event()
+
+
+def cancel_recording() -> None:
+    print("cancel_recording() called")
+    _cancel_recording.set()
+
+
 def record_and_transcribe(samplerate: int = 16000) -> str:
     """Records from the default mic for `duration_seconds`, returns transcribed text."""
     audio = _record_until_silence()
@@ -36,15 +46,15 @@ def record_and_transcribe(samplerate: int = 16000) -> str:
     result = " ".join(segment.text for segment in segments)
     return result
 
-
 def _record_until_silence(
     samplerate: int = 16000,
     chunk_duration: float = 0.1,
-    silence_threshold: float = 0.018,
-    silence_limit: float = 1.0,
-    max_duration: float = 15.0,
+    silence_threshold: float = 0.015,
+    silence_limit: float = 1,
+    max_duration: float = 10.0,
 ) -> np.ndarray:
-    """Records audio until the user stops talking, returns the full recording as a numpy array."""
+    _cancel_recording.clear()
+
     chunk_samples = int(chunk_duration * samplerate)
     recorded_chunks = []
     speech_started = False
@@ -68,16 +78,24 @@ def _record_until_silence(
 
         total_elapsed += chunk_duration
 
+        if _cancel_recording.is_set():
+            print("Cancellation detected, breaking")
+            break
+
         if speech_started and silence_elapsed >= silence_limit:
             break
         elif total_elapsed >= max_duration:
             break
 
     stream.stop()
+    time.sleep(0.05)
     stream.close()
+
+    if not recorded_chunks:
+        return np.array([])
+
     result = np.concatenate(recorded_chunks, axis=0)
     return result
-
 
 def speak(text: str) -> None:
     """Speaks `text` out loud, platform-appropriate implementation."""

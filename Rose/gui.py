@@ -14,7 +14,7 @@ import random
 import traceback
 import math
 import time
-from core.audio_io import speak,stop_speaking
+from core.audio_io import speak, stop_speaking
 
 
 GUI_ERROR_LOG = "logs/gui_error.log"
@@ -62,6 +62,7 @@ class RoseSettingsApp(ctk.CTk):
         self.report_callback_exception = self._log_callback_exception
         self.title("Rose Settings")
         self.geometry("700x600")
+        self.protocol("WM_DELETE_WINDOW", self._on_close)
 
         self.settings = load_settings()
 
@@ -107,7 +108,18 @@ class RoseSettingsApp(ctk.CTk):
         self._switch_screen("Home")
 
 
+    def _on_close(self):
+        from core.audio_io import stop_speaking, cancel_recording
+        from core.status import set_status
 
+        stop_speaking()
+        cancel_recording()
+        set_status("idle")
+
+        if self._check_main_process_running():
+            self._stop_rose()
+
+        self.destroy()
         
     def _switch_screen(self, screen_name):
         for frame in self.screens.values():
@@ -609,11 +621,11 @@ class RoseSettingsApp(ctk.CTk):
         bubble = ctk.CTkLabel(
             row,
             text=text,
-            wraplength=280,
+            wraplength=400,
             justify="left",
             fg_color=("#0B93F6" if is_user else "#3A3A3C"),
             text_color="white",
-            corner_radius=12,
+            corner_radius=10,
             padx=12, pady=8,
         )
 
@@ -783,19 +795,173 @@ class RoseSettingsApp(ctk.CTk):
         threading.Thread(target=run_test, daemon=True).start()
 
 
-    def _build_home_tab(self,tab):
+    def _build_home_tab(self, tab):
+        # split Home into two side-by-side sections
+        left_panel = ctk.CTkFrame(tab, fg_color="#0d1520", corner_radius=0)
+        left_panel.pack(side="left", fill="both", expand=True)
 
-        self.status_canvas = ctk.CTkCanvas(tab, bg="#0d1520", highlightthickness=0)
+        right_panel = ctk.CTkFrame(tab, fg_color="#151E2E", corner_radius=0, width=400)
+        right_panel.pack(side="right", fill="y")
+        right_panel.pack_propagate(False)  # keep the fixed width, don't let contents resize it
+
+        # --- LEFT: the canvas, ring, buttons - all your existing code, just parented to left_panel ---
+        self.status_canvas = ctk.CTkCanvas(left_panel, bg="#0d1520", highlightthickness=0)
         self.status_canvas.pack(fill="both", expand=True, padx=0, pady=0)
 
+        self.speak_button = ctk.CTkButton(
+            left_panel, text="◉  SPEAK", width=160, height=44, corner_radius=22,
+            fg_color="transparent", border_width=2, border_color="#3B82F6",
+            hover_color="#1a2938", text_color="#3B82F6",
+            font=ctk.CTkFont(size=13, weight="bold"),
+            command=self._on_speak_button_click,
+        )
+
+        self.stop_talking_button = ctk.CTkButton(
+            left_panel, text="✕  STOP TALKING", width=160, height=36, corner_radius=18,
+            fg_color="transparent", border_width=2, border_color="#EF4444",
+            hover_color="#3a1a1a", text_color="#EF4444",
+            font=ctk.CTkFont(size=12, weight="bold"),
+            command=self._on_stop_talking_click,
+        )
+
+        # --- RIGHT: transcript panel ---
+        ctk.CTkLabel(right_panel, text="Conversation Logs", font=ctk.CTkFont(size=25, weight="bold"), text_color="#F8FAFC").pack(pady=(15, 5), padx=15, anchor="w")
+
+        self.home_transcript_scroll = ctk.CTkScrollableFrame(right_panel, fg_color="#151E2E")
+        self.home_transcript_scroll.pack(fill="both", expand=True, padx=10, pady=(0, 10))
 
         self._rotation_angle = 0
         self._pulse_phase = 0.0
         self._ring_items_created = False
+        self._launchctl_check_counter = 0
+        self._gui_is_speaking = False
 
         self.status_canvas.bind("<Configure>", self._on_canvas_resize)
         self._poll_status()
+        self._load_home_transcript()
+        
 
+    def _load_home_transcript(self):
+        for widget in self.home_transcript_scroll.winfo_children():
+            widget.destroy()
+
+        try:
+            with open("logs/conversation.jsonl") as f:
+                lines = f.readlines()
+        except FileNotFoundError:
+            lines = []
+
+        for line in lines[-15:]:  # only show the most recent 30 messages, since this panel is narrower
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                entry = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+
+            self._add_home_transcript_bubble(entry.get("role"), entry.get("text", ""))
+
+        self.after(50, lambda: self.home_transcript_scroll._parent_canvas.yview_moveto(1.0))
+
+
+    def _add_home_transcript_bubble(self, role: str, text: str):
+        is_user = role == "user"
+
+        row = ctk.CTkFrame(self.home_transcript_scroll, fg_color="transparent")
+        row.pack(fill="x", pady=3, padx=3)
+
+        bubble = ctk.CTkLabel(
+            row, text=text, wraplength=190, justify="left",
+            fg_color=("#0B93F6" if is_user else "#3A3A3C"),
+            text_color="white", corner_radius=10, padx=10, pady=6,
+            font=ctk.CTkFont(size=15),
+        )
+
+        if is_user:
+            bubble.pack(side="right", anchor="e")
+        else:
+            bubble.pack(side="left", anchor="w")
+
+
+    def _on_stop_talking_click(self):
+        from core.status import get_status
+        from core.audio_io import stop_speaking
+
+        if get_status() == "speaking" or self._gui_is_speaking:
+            stop_speaking()
+            self._gui_is_speaking = False
+
+            from core.status import set_status
+            set_status("idle")
+
+    def _on_speak_button_click(self):
+        if not self._check_main_process_running():
+            print("Rose isn't running - start it first")
+            return
+
+        from core.status import get_status
+        from core.audio_io import stop_speaking
+
+        if get_status() == "speaking" or self._gui_is_speaking:
+            stop_speaking()
+            self._gui_is_speaking = False
+
+        self.speak_button.configure(
+            text="◉ LISTENING", state="disabled",
+            border_color="#22C55E", text_color="#22C55E",
+        )
+        threading.Thread(target=self._process_voice_message, daemon=True).start()
+
+
+
+
+    def _process_voice_message(self):
+        from core.audio_io import record_and_transcribe, speak
+        from core.dispatcher import dispatch
+        from core.conversation_log import log_exchange
+        from core.status import set_status
+
+        set_status("listening")
+        print("Starting recording...")
+        result = record_and_transcribe()
+        print("Recording finished, result:", result)
+
+        if not result:
+            set_status("speaking")
+            self._gui_is_speaking = True
+            self.after(0, self._set_speak_button_speaking_state)
+            speak("I didn't catch that")
+            self._gui_is_speaking = False
+            set_status("idle")
+            self.after(0, self._reset_speak_button)
+            return
+
+        response = dispatch(result)
+        log_exchange(result, response)
+        self.after(0, self._load_home_transcript)
+        set_status("speaking")
+        self._gui_is_speaking = True
+        self.after(0, self._set_speak_button_speaking_state)
+        speak(response)
+        self._gui_is_speaking = False
+        set_status("idle")
+
+        self.after(0, self._reset_speak_button)
+
+
+  
+
+    def _set_speak_button_speaking_state(self):
+        self.speak_button.configure(
+            text="◉  SPEAKING (click to stop)", state="normal",
+            border_color="#FBBF24", text_color="#FBBF24",
+        )
+
+
+    def _reset_speak_button(self):
+        print("Resetting speak button")
+        self.speak_button.configure(text="◉  SPEAK", state="normal", border_color="#3B82F6", text_color="#3B82F6")
 
     def _check_main_process_running(self) -> bool:
         import subprocess
@@ -806,9 +972,9 @@ class RoseSettingsApp(ctk.CTk):
         self._main_ring_item = self.status_canvas.create_oval(0, 0, 0, 0, outline="#2a3a4a", width=1)
         self._arc_items = [
             self.status_canvas.create_arc(0, 0, 0, 0, start=0, extent=50, outline="#3a6a9a", width=3, style="arc")
-            for _ in range(6)
+            for _ in range(10)
         ]
-        self._text_item = self.status_canvas.create_text(0, 0, text="ROSE", fill="#3a6a9a", font=("Helvetica", 16, "bold"))
+        self._text_item = self.status_canvas.create_text(0, 0, text="ROSE", fill="#3a6a9a", font=("Helvetica", 25, "bold"))
         self._status_text_item = self.status_canvas.create_text(0, 0, text="", fill="#6a8aaa", font=("Helvetica", 11))
         self._running_status_item = self.status_canvas.create_text(0, 0, text="", fill="#22C55E", font=("Helvetica", 10))
         self._ring_items_created = True
@@ -828,8 +994,8 @@ class RoseSettingsApp(ctk.CTk):
             self._create_ring_items()
 
         center_x = self._canvas_width / 2
-        center_y = self._canvas_height / 2
-        base_radius = min(self._canvas_width, self._canvas_height) * 0.2
+        center_y = self._canvas_height / 3
+        base_radius = min(self._canvas_width, self._canvas_height) * 0.3
 
         if not is_running:
             color = "#EF4444"  # red, overrides everything else when offline
@@ -849,12 +1015,19 @@ class RoseSettingsApp(ctk.CTk):
         # three arcs at different radii and speeds, each offset from the others
 
         arc_configs = [
+            # Inner ring
             (base_radius + 8, 0.5, 0),
-            (base_radius + 8,  0.5, 60),
-            (base_radius + 8,  0.5, 120),
-            (base_radius + 8,  0.5, 180),
-            (base_radius + 8,  0.5, 240),
-            (base_radius + 8,  0.5, 300),
+            (base_radius + 8, 0.5, 60),
+            (base_radius + 8, 0.5, 120),
+            (base_radius + 8, 0.5, 180),
+            (base_radius + 8, 0.5, 240),
+            (base_radius + 8, 0.5, 300),
+
+            # Outer ring
+            (base_radius + 16, 1, 0),
+            (base_radius + 16, 1, 90),
+            (base_radius + 16, 1, 180),
+            (base_radius + 16, 1, 270),
         ]
 
         for i, (arc_r, speed_mult, offset) in enumerate(arc_configs):
@@ -872,7 +1045,7 @@ class RoseSettingsApp(ctk.CTk):
         self.status_canvas.coords(self._text_item, center_x, center_y)
         self.status_canvas.itemconfig(self._text_item, fill=color)
 
-        self.status_canvas.coords(self._status_text_item, center_x, center_y + 30)  # positioned just below the ROSE label
+        self.status_canvas.coords(self._running_status_item, center_x, self._canvas_height - 15) # positioned just below the ROSE label
         self.status_canvas.coords(self._running_status_item, center_x, self._canvas_height - 30)
 
         
@@ -896,6 +1069,8 @@ class RoseSettingsApp(ctk.CTk):
 
     def _start_rose(self):
         result = subprocess.run(["launchctl", "load", PLIST_PATH], capture_output=True, text=True)
+        from core.status import set_status
+        set_status("idle")
         if result.returncode != 0:
             print(f"Failed to start Rose: {result.stderr.strip()}")
         else:
@@ -903,6 +1078,11 @@ class RoseSettingsApp(ctk.CTk):
             
     def _stop_rose(self):
         subprocess.run(["launchctl", "unload", PLIST_PATH])
+        from core.audio_io import stop_speaking, cancel_recording
+        from core.status import set_status
+        stop_speaking()
+        cancel_recording()
+        set_status("idle")
         print("Stopped Rose")
 
 
@@ -910,8 +1090,9 @@ class RoseSettingsApp(ctk.CTk):
         is_running = self._check_main_process_running()
 
         if is_running:
-            from core.audio_io import stop_speaking
+            from core.audio_io import stop_speaking, cancel_recording
             stop_speaking()
+            cancel_recording()
 
             self._stop_rose()
             self._cached_is_running = False
@@ -934,7 +1115,7 @@ class RoseSettingsApp(ctk.CTk):
         if self._launchctl_check_counter % 50 == 0:
             self._cached_is_running = self._check_main_process_running()
 
-        is_running = getattr(self, "_cached_is_running", True)  # default to True until first real check completes
+        is_running = getattr(self, "_cached_is_running", True)
 
         self._draw_status_ring(state, is_running)
 
@@ -943,10 +1124,22 @@ class RoseSettingsApp(ctk.CTk):
         if hasattr(self, "_running_status_item"):
             self.status_canvas.itemconfig(self._running_status_item, text=running_text, fill=running_color)
 
-        self.after(20, self._poll_status)
+        if is_running or self._gui_is_speaking or getattr(self, "_gui_is_recording", False):
+            if not self.speak_button.winfo_ismapped():
+                self.speak_button.place(relx=0.5, rely=0.85, anchor="center")
+        else:
+            if self.speak_button.winfo_ismapped():
+                self.speak_button.place_forget()
 
-        
-        
+        is_speaking_now = (state == "speaking") or self._gui_is_speaking
+        if is_speaking_now:
+            if not self.stop_talking_button.winfo_ismapped():
+                self.stop_talking_button.place(relx=0.5, rely=0.95, anchor="center")
+        else:
+            if self.stop_talking_button.winfo_ismapped():
+                self.stop_talking_button.place_forget()
+
+        self.after(20, self._poll_status)
 
     def _blend_color(self, color_hex, bg_hex, factor):
         """factor: 0.0 = full background, 1.0 = full color"""
