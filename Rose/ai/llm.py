@@ -5,6 +5,7 @@ ai/llm.py - now using tool use / structured output instead of prompted JSON.
 
 from ai.client import client
 from plugins.registry import get_all_action_names, ALL_PLUGINS
+from core.last_action import get_last_action
 
 def build_tools_schema():
     action_names = get_all_action_names() + ["none"]
@@ -47,11 +48,17 @@ def get_action(text: str) -> dict:
         return {"action": "none", "query": None}
 
     try:
+
+        last = get_last_action()
+        context = ""
+        if last:
+            context = f"\n\nThe last thing the user tried to do was: action='{last['action']}', said='{last['query']}', result='{last['result']}'. If the current message seems like a correction or clarification of that (e.g. unclear/garbled text that might be re-specifying what they meant), consider routing to the same action again with the corrected info."
+
         response = client.messages.create(
             model="claude-haiku-4-5",
             max_tokens=100,
             tools=TOOLS,
-            system=DISAMBIGUATION_RULES,
+            system=DISAMBIGUATION_RULES + context,
             tool_choice={"type": "tool", "name": "route_command"},
             messages=[{"role": "user", "content": text}],
         )

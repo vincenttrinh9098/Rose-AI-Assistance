@@ -92,6 +92,9 @@ EDIT_TOOL = [
 ]
 
 def extract_edit(text: str) -> dict:
+
+    if not text or not text.strip():
+        text = "change something"
     today_str = datetime.now().strftime("%A, %B %d, %Y")
 
     response = client.messages.create(
@@ -110,7 +113,8 @@ def extract_edit(text: str) -> dict:
 def extract_date(text: str) -> str:
     """Given natural language like 'tomorrow' or 'next Tuesday', returns a
     resolved date string like 'July 29, 2026'."""
-
+    if not text or not text.strip():
+        text = "today"
     today_str = datetime.now().strftime("%A, %B %d, %Y")
 
     response = client.messages.create(
@@ -131,7 +135,8 @@ def extract_date(text: str) -> str:
 def extract_event(text: str) -> dict:
     """Given natural language like 'dentist next Tuesday at 3pm', returns
     {"title": ..., "date": ..., "time": ...} in AppleScript-friendly formats."""
-
+    if not text or not text.strip():
+        text = "an event"
     today_str = datetime.now().strftime("%A, %B %d, %Y")
 
     response = client.messages.create(

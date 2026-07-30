@@ -52,6 +52,8 @@ class ListEventsPlugin(Plugin):
     extra_fields = {}
 
     def handle(self, query: str, **kwargs) -> str:
+        if not query:
+            query = "today"  # sensible default when no date phrase was extracted
         date_str = extract_date(query)
         return list_events_for_date(date_str)
 
@@ -66,6 +68,9 @@ class ListGoogleEventsPlugin(Plugin):
     extra_fields = {}
 
     def handle(self, query: str, **kwargs) -> str:
+        if not query:
+            query = "today"  # sensible default when no date phrase was extracted
+
         date_str = extract_date(query)
         return list_todays_google_events(date_str)
     

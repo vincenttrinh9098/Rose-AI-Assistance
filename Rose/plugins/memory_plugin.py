@@ -6,10 +6,13 @@ from ai.memory_parser import extract_memory
 class RememberFactPlugin(Plugin):
     name = "remember_fact"
     description = (
-        "Stores a fact the user explicitly asks to be remembered long-term "
-        "(e.g. 'remember that I go to this specific school', 'remember I like dark mode', "
-        "'remember my project is called Rose'). Only use this when the user "
-        "clearly wants something permanently remembered, not for casual mentions."
+        "Stores a fact the user EXPLICITLY asks to be remembered long-term. "
+        "REQUIRED: the phrase must contain an explicit memory-trigger word or phrase like "
+        "'remember', 'don't forget', or 'keep in mind'. "
+        "If the phrase does NOT contain one of these trigger words, even if it sounds like "
+        "a fact about the user (e.g. 'my favorite color is blue', 'I live in Sacramento'), "
+        "do NOT use this action - use general_question instead. "
+        "The presence of the trigger word is mandatory, not optional."
     )
     extra_fields = {}
 

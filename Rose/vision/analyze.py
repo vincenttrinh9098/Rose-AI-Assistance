@@ -11,6 +11,8 @@ from ai.client import client
 
 def analyze_screen(image_path: str, question: str) -> str:
     """Sends a screenshot + question to Claude, returns Claude's text answer."""
+    if not question or not question.strip():
+        question = "What is on this screen?"
 
     with open(image_path, "rb") as f:
         raw_bytes = f.read()

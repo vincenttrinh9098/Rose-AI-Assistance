@@ -1,6 +1,9 @@
 {
   "identity": {
-    "school": "UCSD"
+    "school": "UCSD",
+    "height": "5\"11",
+    "race": "asian",
+    "name": "Vincent"
   },
   "goals": {},
   "interests": {},
@@ -11,8 +14,8 @@
     "theme": "dark mode"
   },
   "knowledge": {},
-  "projects": [
-    "A project called Rose"
-  ],
-  "lifestyle": {}
+  "projects": [],
+  "lifestyle": {
+    "health": "weightlift"
+  }
 }

@@ -32,6 +32,9 @@ MEMORY_TOOL = [
 
 
 def extract_memory(text: str) -> dict:
+    if not text or not text.strip():
+        text = "nothing specific"
+        
     response = client.messages.create(
         model="claude-haiku-4-5",
         max_tokens=150,

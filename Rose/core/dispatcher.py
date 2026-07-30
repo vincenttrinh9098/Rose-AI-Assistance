@@ -117,7 +117,12 @@ def dispatch(text: str) -> str:
     plugin = get_plugin(action)
     if plugin is not None:
         extra_kwargs = {field: result.get(field) for field in plugin.extra_fields}
-        return plugin.handle(query, **extra_kwargs)
+        query = query or ""
+        response = plugin.handle(query, **extra_kwargs)
+        from core.last_action import set_last_action
+        set_last_action(action, query, response)
+
+        return response
 
     
 

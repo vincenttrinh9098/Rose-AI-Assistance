@@ -8,7 +8,8 @@ from core.conversation import get_history, add_exchange
 
 def analyze_text(text: str, question: str) -> str:
     """Sends page text + a question to Claude, returns Claude's spoken-style answer."""
-
+    if not question or not question.strip():
+        question = "What is this about?"
     response = client.messages.create(
         model="claude-haiku-4-5",
         max_tokens=500,
@@ -17,6 +18,8 @@ def analyze_text(text: str, question: str) -> str:
     return response.content[0].text
 
 def guess_url(site_name: str) -> str | None:
+    if not site_name or not site_name.strip():
+        return None
     response = client.messages.create(
         model="claude-haiku-4-5",
         max_tokens=50,
@@ -38,7 +41,8 @@ def guess_url(site_name: str) -> str | None:
 def general_question(question: str) -> str:
     """Sends a general question to Claude, with web search enabled, returns a spoken-style answer."""
     from core.long_term_memory import format_memory_for_prompt
-
+    if not question or not question.strip():
+        question = "hello"
     history = get_history()
     memory_context = format_memory_for_prompt()
 

@@ -27,6 +27,11 @@ STATUS_COLORS = {
     "speaking": "#FBBF24",
 }
 
+CATEGORY_ICONS = {
+    "identity": "◆", "goals": "◈", "interests": "♦", "technical": "◇",
+    "preferences": "◉", "knowledge": "◐", "projects": "◧", "lifestyle": "◑",
+}
+
 systemWidth = 500
 systemHeight= 550
 
@@ -74,7 +79,7 @@ class RoseSettingsApp(ctk.CTk):
 
         self.nav_dropdown = ctk.CTkOptionMenu(
             nav_bar,
-            values=["Home", "Voice", "Hotkey", "Config Files", "Conversation", "Gui Error Logs", "API Keys"],
+            values=["Home", "Voice", "Hotkey", "Config Files", "Conversation", "Gui Error Logs", "API Keys","Memory"],
             command=self._switch_screen,
             fg_color="#111827",
             button_color="#2563EB",
@@ -96,6 +101,7 @@ class RoseSettingsApp(ctk.CTk):
         self.screens["Conversation"] = ctk.CTkFrame(self.content_container, fg_color="transparent")
         self.screens["Gui Error Logs"] = ctk.CTkFrame(self.content_container, fg_color="transparent")
         self.screens["API Keys"] = ctk.CTkFrame(self.content_container, fg_color="transparent")
+        self.screens["Memory"] = ctk.CTkFrame(self.content_container, fg_color="transparent")
 
         self._build_home_tab(self.screens["Home"])
         self._build_voice_tab(self.screens["Voice"])
@@ -104,6 +110,7 @@ class RoseSettingsApp(ctk.CTk):
         self._build_conversation_tab(self.screens["Conversation"])
         self._build_error_log_tab(self.screens["Gui Error Logs"])
         self._build_api_keys_tab(self.screens["API Keys"])
+        self._build_memory_tab(self.screens["Memory"])
 
         self._switch_screen("Home")
 
@@ -134,6 +141,21 @@ class RoseSettingsApp(ctk.CTk):
 
 #VOICE TAB
     def _build_voice_tab(self, tab):
+        from core.long_term_memory import load_memory
+
+        ctk.CTkLabel(tab, text="Your Name", font=ctk.CTkFont(weight="bold")).pack(pady=(15, 5))
+
+        self.name_entry = ctk.CTkEntry(tab, placeholder_text="e.g. Vincent")
+        self.name_entry.pack(pady=5)
+
+        memory = load_memory()
+        current_name = memory.get("identity", {}).get("name")
+        if current_name:
+            self.name_entry.insert(0, current_name)
+
+        save_name_button = ctk.CTkButton(tab, text="Save Name", command=self._save_name)
+        save_name_button.pack(pady=(5, 20))
+
         engine = pyttsx3.init()
         voices = engine.getProperty('voices')
         self.voice_map = {v.name: v.id for v in voices}
@@ -149,7 +171,18 @@ class RoseSettingsApp(ctk.CTk):
 
         save_button = ctk.CTkButton(tab, text="Save Voice", command=self._save_voice)
         save_button.pack(pady=10)
-            
+
+
+    def _save_name(self):
+        from core.long_term_memory import remember_fact
+
+        name = self.name_entry.get().strip()
+        if not name:
+            return
+        remember_fact("identity", "name", name)
+        print(f"Saved name: {name}")
+        
+                
     def _save_voice(self):
         selected_name = self.voice_dropdown.get()
         selected_id = self.voice_map[selected_name]
@@ -835,6 +868,7 @@ class RoseSettingsApp(ctk.CTk):
         self._ring_items_created = False
         self._launchctl_check_counter = 0
         self._gui_is_speaking = False
+        self._floating_lines = [] 
 
         self.status_canvas.bind("<Configure>", self._on_canvas_resize)
         self._poll_status()
@@ -1009,6 +1043,27 @@ class RoseSettingsApp(ctk.CTk):
         self.status_canvas.tag_bind(self._text_item, "<Leave>", lambda e: self.status_canvas.config(cursor=""))
         
 
+    def _draw_gradient_background(self):
+        """Draws a vertical gradient from dark navy to a slightly different dark blue."""
+        top_color = (13, 21, 32)      # #0d1520
+        bottom_color = (20, 30, 48)   # a bit lighter/bluer
+
+        steps = 60
+        band_height = self._canvas_height / steps
+
+        for i in range(steps):
+            factor = i / steps
+            r = int(top_color[0] + (bottom_color[0] - top_color[0]) * factor)
+            g = int(top_color[1] + (bottom_color[1] - top_color[1]) * factor)
+            b = int(top_color[2] + (bottom_color[2] - top_color[2]) * factor)
+            color = f"#{r:02x}{g:02x}{b:02x}"
+
+            y1 = i * band_height
+            y2 = y1 + band_height + 1  # +1 avoids visible seams between bands
+            self.status_canvas.create_rectangle(0, y1, self._canvas_width, y2, fill=color, outline="", tags="gradient")
+
+        self.status_canvas.tag_lower("gradient")  # keep it behind everything else
+
 
     def _draw_status_ring(self, state, is_running):
         if not hasattr(self, "_canvas_width"):
@@ -1048,12 +1103,14 @@ class RoseSettingsApp(ctk.CTk):
             (base_radius + 8, 0.5, 300),
 
             # Outer ring
-            (base_radius + 16, 1, 0),
-            (base_radius + 16, 1, 90),
-            (base_radius + 16, 1, 180),
-            (base_radius + 16, 1, 270),
+            (base_radius + 16, .8, 0),
+            (base_radius + 16, .8, 90),
+            (base_radius + 16, .8, 180),
+            (base_radius + 16, .8, 270),
         ]
 
+        #base_color = "#EF4444" if not is_running else STATUS_COLORS.get(state, "#3a6a9a")
+        #accent_color = "#F97316" if not is_running else "#8B5CF6"  # secondary color for the gradient
         for i, (arc_r, speed_mult, offset) in enumerate(arc_configs):
             angle = (self._rotation_angle * speed_mult + offset) % 360
             self.status_canvas.coords(
@@ -1066,19 +1123,68 @@ class RoseSettingsApp(ctk.CTk):
                 state="normal",
             )
 
+
         self.status_canvas.coords(self._text_item, center_x, center_y)
         self.status_canvas.itemconfig(self._text_item, fill=color)
 
         self.status_canvas.coords(self._running_status_item, center_x, self._canvas_height - 15) # positioned just below the ROSE label
         self.status_canvas.coords(self._running_status_item, center_x, self._canvas_height - 30)
 
-        
+
+    def _init_floating_lines(self):
+        import random
+        LINE_COLORS = ["#1e3a5f", "#16283f", "#254a75", "#122236"]
+
+        self._floating_lines = []
+        for _ in range(50):
+            self._floating_lines.append({
+                "item": self.status_canvas.create_line(0, 0, 0, 0, fill=random.choice(LINE_COLORS), width=2),
+                "y": random.uniform(0, self._canvas_height),
+                "speed": random.uniform(1, 0.6),
+                "length_fraction": random.uniform(0.4, 0.9),   # store as a fraction, not a pixel count
+                "x_offset_fraction": random.uniform(0, 0.3),
+            })
+
+
+    def _update_floating_lines(self):
+        #top_color = (30, 58, 95)     # #1e3a5f
+        #bottom_color = (60, 30, 90)  # a purple-ish tone for contrast, adjust to taste
+
+        # Option 1: Deep Cyber / Modern HUD (Cleanest overall)
+        top_color = (10, 17, 40)  # #0a1128
+        bottom_color = (16, 42, 67)  # #102a43
+
+        # Option 2: Smooth Indigo / Blue-Purple
+        # top_color = (15, 23, 42)    # #0f172a
+        # bottom_color = (30, 27, 75)   # #1e1b4b
+
+        for line in self._floating_lines:
+            line["y"] += line["speed"]
+            if line["y"] > self._canvas_height + 20:
+                line["y"] = -20
+
+            x1 = line["x_offset_fraction"] * self._canvas_width
+            x2 = x1 + (line["length_fraction"] * self._canvas_width)
+            self.status_canvas.coords(line["item"], x1, line["y"], x2, line["y"])
+
+            # interpolate color based on vertical position
+            factor = max(0, min(1, line["y"] / self._canvas_height))
+            r = int(top_color[0] + (bottom_color[0] - top_color[0]) * factor)
+            g = int(top_color[1] + (bottom_color[1] - top_color[1]) * factor)
+            b = int(top_color[2] + (bottom_color[2] - top_color[2]) * factor)
+            color = f"#{r:02x}{g:02x}{b:02x}"
+            self.status_canvas.itemconfig(line["item"], fill=color)
+
 
     def _on_canvas_resize(self, event):
         self._canvas_width = event.width
         self._canvas_height = event.height
+        self.status_canvas.delete("gradient")
+        self._draw_gradient_background()
         self._draw_grid_background()
 
+        if not hasattr(self, "_floating_lines") or not self._floating_lines:
+            self._init_floating_lines()
 
     def _draw_grid_background(self):
         self.status_canvas.delete("grid")
@@ -1128,7 +1234,17 @@ class RoseSettingsApp(ctk.CTk):
 
     def _speak_greeting(self):
         from core.audio_io import speak
-        speak("Welcome back, how can I assist you today?")
+        from core.long_term_memory import load_memory
+
+        memory = load_memory()
+        name = memory.get("identity", {}).get("name")
+
+        if name:
+            greeting = f"Welcome back, {name}. How can I assist you today?"
+        else:
+            greeting = "Welcome back, how can I assist you today?"
+
+        speak(greeting)
 
     def _poll_status(self):
         from core.status import get_status
@@ -1142,6 +1258,7 @@ class RoseSettingsApp(ctk.CTk):
         is_running = getattr(self, "_cached_is_running", True)
 
         self._draw_status_ring(state, is_running)
+        self._update_floating_lines() 
 
         running_text = "● Rose is running" if is_running else "○ Rose is not running"
         running_color = "#22C55E" if is_running else "#EF4444"
@@ -1172,6 +1289,135 @@ class RoseSettingsApp(ctk.CTk):
         blended = tuple(int(bg[j] + (c[j] - bg[j]) * factor) for j in range(3))
         return f"#{blended[0]:02x}{blended[1]:02x}{blended[2]:02x}"
 
+
+
+    def _build_memory_tab(self, tab):
+        ctk.CTkLabel(tab, text="Long term memory storage", font=ctk.CTkFont(size=20, weight="bold"), text_color="#F8FAFC").pack(pady=(20, 5))
+        ctk.CTkLabel(tab, text="Facts your assistant remembers about you", text_color="#8E9BAE", font=ctk.CTkFont(size=12)).pack(pady=(0, 15))
+        self.memory_categories = ["identity", "goals", "interests", "technical", "preferences", "knowledge", "projects", "lifestyle"]
+
+        self.memory_category_selector = ctk.CTkOptionMenu(
+            tab, values=[c.capitalize() for c in self.memory_categories],
+            command=self._on_memory_category_selected,
+        )
+        self.memory_category_selector.pack(pady=(15, 10))
+
+        self.memory_list_frame = ctk.CTkScrollableFrame(tab, fg_color="#151E2E", height=250)
+        self.memory_list_frame.pack(fill="both", expand=True, padx=15, pady=(0, 10))
+
+        add_frame = ctk.CTkFrame(tab, fg_color="transparent")
+        add_frame.pack(pady=10, fill="x", padx=15)
+
+        self.memory_key_field = ctk.CTkEntry(add_frame, placeholder_text="Label (e.g. 'school')")
+        self.memory_key_field.pack(side="left", padx=(0, 5), fill="x", expand=True)
+
+        self.memory_value_field = ctk.CTkEntry(add_frame, placeholder_text="Value (e.g. 'UCSD')")
+        self.memory_value_field.pack(side="left", padx=5, fill="x", expand=True)
+
+        add_button = ctk.CTkButton(add_frame, text="Add", width=60, command=self._add_memory_fact)
+        add_button.pack(side="left", padx=(5, 0))
+
+        self._on_memory_category_selected("Identity")
+
+    def _on_memory_category_selected(self, selected_label):
+        self._current_memory_category = selected_label.lower()
+        self._load_memory_list()
+
+
+
+    def _load_memory_list(self):
+        from core.long_term_memory import load_memory
+
+        for widget in self.memory_list_frame.winfo_children():
+            widget.destroy()
+
+        memory = load_memory()
+
+
+        if not any(memory.get(c, {} if c != "projects" else []) for c in self.memory_categories):
+            ctk.CTkLabel(
+                self.memory_list_frame,
+                text="I don't know much about you yet.\nTell me something and say 'remember that...'",
+                text_color="#64748B", font=ctk.CTkFont(size=13), justify="center",
+            ).pack(pady=40)
+            return
+    
+        for category in self.memory_categories:
+            contents = memory.get(category, {} if category != "projects" else [])
+            if not contents:
+                continue
+
+            ctk.CTkLabel(
+                self.memory_list_frame,
+                text=f"{CATEGORY_ICONS.get(category, '•')}  {category.capitalize()}",
+                font=ctk.CTkFont(size=14, weight="bold"), text_color="#3B82F6",
+            ).pack(anchor="w", padx=5, pady=(16, 6))
+
+            if category == "projects":
+                for item in contents:
+                    self._add_memory_row(category, None, item)
+            else:
+                for key, value in contents.items():
+                    self._add_memory_row(category, key, value)
+
+
+
+    def _add_memory_row(self, category, key, value):
+        row = ctk.CTkFrame(self.memory_list_frame, fg_color="transparent")
+        row.pack(fill="x", pady=2, padx=5)
+
+        label_text = f"{key}: {value}" if key else value
+        chip = ctk.CTkLabel(
+            row, text=label_text, anchor="w",
+            fg_color="#1a2938", corner_radius=14, padx=14, pady=6,
+            text_color="#E2E8F0", font=ctk.CTkFont(size=12),
+        )
+        chip.pack(side="left", padx=(0, 6), pady=3)
+
+        delete_button = ctk.CTkButton(
+            row, text="✕", width=24, height=24, corner_radius=12,
+            fg_color="transparent", hover_color="#3a1a1a", text_color="#EF4444",
+            border_width=1, border_color="#EF4444",
+            command=lambda c=category, k=key, v=value: self._delete_memory_fact(c, k, v),
+        )
+        delete_button.pack(side="left", padx=(0, 0))
+
+
+    def _add_memory_fact(self):
+        from core.long_term_memory import remember_fact
+
+        value = self.memory_value_field.get().strip()
+        if not value:
+            return
+
+        if self._current_memory_category == "projects":
+            remember_fact("projects", None, value)
+        else:
+            key = self.memory_key_field.get().strip()
+            if not key:
+                print("Label is required for this category")
+                return
+            remember_fact(self._current_memory_category, key, value)
+
+        self.memory_key_field.delete(0, "end")
+        self.memory_value_field.delete(0, "end")
+        self._load_memory_list()
+
+
+    def _delete_memory_fact(self, category, key, value):
+        from core.long_term_memory import load_memory, save_memory
+
+        memory = load_memory()
+
+        if category == "projects":
+            if value in memory["projects"]:
+                memory["projects"].remove(value)
+        else:
+            if key in memory.get(category, {}):
+                del memory[category][key]
+
+        save_memory(memory)
+        self._load_memory_list()
 
 if __name__ == "__main__":
     try:

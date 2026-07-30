@@ -48,6 +48,9 @@ def get_history() -> list:
 
 def add_exchange(user_text: str, assistant_text: str) -> None:
     """Appends a user message + assistant reply to history, updates the timestamp."""
+    if not user_text or not user_text.strip():
+        return  # don't save empty exchanges at all
+
     data = _load()
     history = data.get("history", [])
 

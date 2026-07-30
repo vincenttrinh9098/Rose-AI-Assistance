@@ -12,3 +12,71 @@ Traceback (most recent call last):
            ^^^^^^^^^^^^^^^^^^^^^^
 AttributeError: '_tkinter.tkapp' object has no attribute '_process_voice_message'
 
+Traceback (most recent call last):
+  File "/Users/vintrinh/Desktop/vincent_personal_projects/Rose-AI-Assistance/Rose/gui.py", line 1280, in <module>
+    app = RoseSettingsApp()
+          ^^^^^^^^^^^^^^^^^
+  File "/Users/vintrinh/Desktop/vincent_personal_projects/Rose-AI-Assistance/Rose/gui.py", line 108, in __init__
+    self._build_memory_tab(self.screens["Memory"])
+                           ~~~~~~~~~~~~^^^^^^^^^^
+KeyError: 'Memory'
+
+Traceback (most recent call last):
+  File "/Users/vintrinh/Desktop/vincent_personal_projects/Rose-AI-Assistance/Rose/gui.py", line 1289, in <module>
+    app = RoseSettingsApp()
+          ^^^^^^^^^^^^^^^^^
+  File "/Users/vintrinh/Desktop/vincent_personal_projects/Rose-AI-Assistance/Rose/gui.py", line 108, in __init__
+    self._build_memory_tab(self.screens["Memory"])
+  File "/Users/vintrinh/Desktop/vincent_personal_projects/Rose-AI-Assistance/Rose/gui.py", line 1203, in _build_memory_tab
+    self._on_memory_category_selected("Identity")
+  File "/Users/vintrinh/Desktop/vincent_personal_projects/Rose-AI-Assistance/Rose/gui.py", line 1207, in _on_memory_category_selected
+    self._load_memory_list()
+  File "/Users/vintrinh/Desktop/vincent_personal_projects/Rose-AI-Assistance/Rose/gui.py", line 1233, in _load_memory_list
+    self._add_memory_row(category, key, value)
+TypeError: RoseSettingsApp._add_memory_row() takes 3 positional arguments but 4 were given
+
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/tkinter/__init__.py", line 1968, in __call__
+    return self.func(*args)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/vintrinh/Desktop/vincent_personal_projects/Rose-AI-Assistance/Rose/venv/lib/python3.12/site-packages/customtkinter/windows/widgets/ctk_button.py", line 564, in _on_release
+    self._command()
+  File "/Users/vintrinh/Desktop/vincent_personal_projects/Rose-AI-Assistance/Rose/gui.py", line 1245, in <lambda>
+    command=lambda c=category, k=key, v=value: self._delete_memory_fact(c, k, v),
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: RoseSettingsApp._delete_memory_fact() takes 3 positional arguments but 4 were given
+
+Traceback (most recent call last):
+  File "/Users/vintrinh/Desktop/vincent_personal_projects/Rose-AI-Assistance/Rose/gui.py", line 1395, in <module>
+    app = RoseSettingsApp()
+          ^^^^^^^^^^^^^^^^^
+  File "/Users/vintrinh/Desktop/vincent_personal_projects/Rose-AI-Assistance/Rose/gui.py", line 106, in __init__
+    self._build_home_tab(self.screens["Home"])
+  File "/Users/vintrinh/Desktop/vincent_personal_projects/Rose-AI-Assistance/Rose/gui.py", line 873, in _build_home_tab
+    self._init_floating_lines()
+  File "/Users/vintrinh/Desktop/vincent_personal_projects/Rose-AI-Assistance/Rose/gui.py", line 1137, in _init_floating_lines
+    "y": random.uniform(0, self._canvas_height),
+                           ^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/tkinter/__init__.py", line 2433, in __getattr__
+    return getattr(self.tk, attr)
+           ^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: '_tkinter.tkapp' object has no attribute '_canvas_height'
+
+Traceback (most recent call last):
+  File "/Users/vintrinh/Desktop/vincent_personal_projects/Rose-AI-Assistance/Rose/gui.py", line 1397, in <module>
+    app = RoseSettingsApp()
+          ^^^^^^^^^^^^^^^^^
+  File "/Users/vintrinh/Desktop/vincent_personal_projects/Rose-AI-Assistance/Rose/gui.py", line 106, in __init__
+    self._build_home_tab(self.screens["Home"])
+  File "/Users/vintrinh/Desktop/vincent_personal_projects/Rose-AI-Assistance/Rose/gui.py", line 873, in _build_home_tab
+    self._poll_status()
+  File "/Users/vintrinh/Desktop/vincent_personal_projects/Rose-AI-Assistance/Rose/gui.py", line 1234, in _poll_status
+    self._update_floating_lines()
+  File "/Users/vintrinh/Desktop/vincent_personal_projects/Rose-AI-Assistance/Rose/gui.py", line 1143, in _update_floating_lines
+    for line in self._floating_lines:
+                ^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/tkinter/__init__.py", line 2433, in __getattr__
+    return getattr(self.tk, attr)
+           ^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: '_tkinter.tkapp' object has no attribute '_floating_lines'
+
