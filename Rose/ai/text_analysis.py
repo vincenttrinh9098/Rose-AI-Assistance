@@ -33,16 +33,24 @@ def guess_url(site_name: str) -> str | None:
         return None
     return text
 
+
+
 def general_question(question: str) -> str:
     """Sends a general question to Claude, with web search enabled, returns a spoken-style answer."""
+    from core.long_term_memory import format_memory_for_prompt
+
     history = get_history()
+    memory_context = format_memory_for_prompt()
+
+    system_prompt = memory_context if memory_context else None
+
     response = client.messages.create(
         model="claude-haiku-4-5",
         max_tokens=500,
+        system=system_prompt,
         tools=[{"type": "web_search_20250305", "name": "web_search"}],
-        messages=history +[{"role": "user", "content": f"{question}\n\nAnswer in 2-4 natural spoken sentences, as if speaking out loud. No markdown formatting."}],
+        messages=history + [{"role": "user", "content": f"{question}\n\nAnswer in 2-4 natural spoken sentences, as if speaking out loud. No markdown formatting."}],
     )
-
 
     text_blocks = []
     for block in response.content:

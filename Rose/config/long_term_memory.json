@@ -1,0 +1,18 @@
+{
+  "identity": {
+    "school": "UCSD"
+  },
+  "goals": {},
+  "interests": {},
+  "technical": {
+    "favorite_programming_language": "Python"
+  },
+  "preferences": {
+    "theme": "dark mode"
+  },
+  "knowledge": {},
+  "projects": [
+    "A project called Rose"
+  ],
+  "lifestyle": {}
+}

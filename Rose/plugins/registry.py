@@ -11,10 +11,11 @@ from plugins.github_plugin import ListPRsPlugin, OpenRepoPlugin
 from plugins.files_plugin import FindFilePlugin
 from plugins.steam_plugin import LaunchGamePlugin
 from plugins.calendar_plugin import AddGoogleCalendarEventPlugin, ListGoogleEventsPlugin, EditCalendarEventPlugin,DeleteCalendarEventPlugin
-
+from plugins.memory_plugin import RememberFactPlugin
 
 
 ALL_PLUGINS = [
+    RememberFactPlugin(),
     AddNotePlugin(),
     AddGoogleCalendarEventPlugin(),
     ListGoogleEventsPlugin(),
