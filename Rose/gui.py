@@ -55,41 +55,52 @@ class RoseSettingsApp(ctk.CTk):
         self.geometry("700x600")
 
         self.settings = load_settings()
-        self.tabview = ctk.CTkTabview(
-            self,
-            corner_radius=0,
-            border_width=0,
 
-            segmented_button_fg_color="#0d1520",
-            segmented_button_selected_color="#2563EB",
-            segmented_button_selected_hover_color="#3B82F6",
-            segmented_button_unselected_color="#0d1520",
-            segmented_button_unselected_hover_color="#1F2937",
+        # top navigation bar
+        nav_bar = ctk.CTkFrame(self, height=50, fg_color="#0d1520", corner_radius=0)
+        nav_bar.pack(fill="x", side="top")
 
-            text_color="#F8FAFC",
-            text_color_disabled="#64748B",
+        ctk.CTkLabel(nav_bar, text="Rose", font=ctk.CTkFont(size=16, weight="bold"), text_color="#F8FAFC").pack(side="left", padx=15)
+
+        self.nav_dropdown = ctk.CTkOptionMenu(
+            nav_bar,
+            values=["Home", "Voice", "Hotkey", "Config Files", "Conversation", "Gui Error Logs", "API Keys"],
+            command=self._switch_screen,
+            fg_color="#111827",
+            button_color="#2563EB",
+            button_hover_color="#3B82F6",
         )
+        self.nav_dropdown.pack(side="right", padx=15, pady=8)
+
+        # main content container - all screens live here, only one visible at a time
+        self.content_container = ctk.CTkFrame(self, fg_color="#151E2E", corner_radius=0)
+        self.content_container.pack(fill="both", expand=True)
+
+        # build each screen as its own frame inside content_container
+        self.screens = {}
+        self.screens["Home"] = ctk.CTkFrame(self.content_container, fg_color="#0d1520", corner_radius=0)
+        self.screens["Voice"] = ctk.CTkFrame(self.content_container, fg_color="transparent")
+        self.screens["Hotkey"] = ctk.CTkFrame(self.content_container, fg_color="#151E2E")
+        self.screens["Config Files"] = ctk.CTkFrame(self.content_container, fg_color="transparent")
+        self.screens["Conversation"] = ctk.CTkFrame(self.content_container, fg_color="transparent")
+        self.screens["Gui Error Logs"] = ctk.CTkFrame(self.content_container, fg_color="transparent")
+        self.screens["API Keys"] = ctk.CTkFrame(self.content_container, fg_color="transparent")
+
+        self._build_home_tab(self.screens["Home"])
+        self._build_voice_tab(self.screens["Voice"])
+        self._build_hotkey_tab(self.screens["Hotkey"])
+        self._build_config_tab(self.screens["Config Files"])
+        self._build_conversation_tab(self.screens["Conversation"])
+        self._build_error_log_tab(self.screens["Gui Error Logs"])
+        self._build_api_keys_tab(self.screens["API Keys"])
+
+        self._switch_screen("Home")
 
 
-        self.tabview.pack(expand=True, fill="both", padx=0, pady=0)
-
-
-        
-        self.tabview.add("Home")
-        self.tabview.add("Voice")
-        self.tabview.add("Hotkey")
-        self.tabview.add("Config Files")
-        self.tabview.add("Conversation")
-        self.tabview.add("Gui Error Logs")
-        self.tabview.add("API Keys")
-        
-        self._build_home_tab()
-        self._build_voice_tab()
-        self._build_hotkey_tab()
-        self._build_config_tab()
-        self._build_conversation_tab()
-        self._build_error_log_tab()
-        self._build_api_keys_tab()
+    def _switch_screen(self, screen_name):
+        for frame in self.screens.values():
+            frame.pack_forget()
+        self.screens[screen_name].pack(fill="both", expand=True)
         
 
     def _log_callback_exception(self, exc, val, tb):
@@ -98,8 +109,7 @@ class RoseSettingsApp(ctk.CTk):
         print("".join(traceback.format_exception(exc, val, tb)))
 
 #VOICE TAB
-    def _build_voice_tab(self):
-        tab = self.tabview.tab("Voice")
+    def _build_voice_tab(self, tab):
         engine = pyttsx3.init()
         voices = engine.getProperty('voices')
         self.voice_map = {v.name: v.id for v in voices}
@@ -125,14 +135,13 @@ class RoseSettingsApp(ctk.CTk):
 
     #HOTKEY TAB
 
-    def _build_hotkey_tab(self):
-        tab = self.tabview.tab("Hotkey")
+    def _build_hotkey_tab(self,tab):
 
         current_hotkey = self.settings.get("hotkey", "<cmd>+<shift>+0")
         current_modifiers, current_key = self._parse_hotkey(current_hotkey)
 
         # --- Modifiers group ---
-        modifier_frame = ctk.CTkFrame(tab)
+        modifier_frame = ctk.CTkFrame(tab, fg_color="#1F2937")
         modifier_frame.pack(pady=(15, 5), padx=20, fill="x")
 
         ctk.CTkLabel(modifier_frame, text="Modifiers", font=ctk.CTkFont(weight="bold")).pack(pady=(10, 5))
@@ -148,8 +157,9 @@ class RoseSettingsApp(ctk.CTk):
         ctk.CTkCheckBox(modifier_frame, text="⌥ Option", variable=self.alt_var).pack(pady=(3, 10), anchor="w", padx=30)
 
         # --- Key group ---
-        key_frame = ctk.CTkFrame(tab)
+        key_frame = ctk.CTkFrame(tab, fg_color="#1F2937")
         key_frame.pack(pady=5, padx=20, fill="x")
+
 
         ctk.CTkLabel(key_frame, text="Key", font=ctk.CTkFont(weight="bold")).pack(pady=(10, 5))
 
@@ -261,8 +271,7 @@ class RoseSettingsApp(ctk.CTk):
 
 #CONFIG TAB
 
-    def _build_config_tab(self):
-        tab = self.tabview.tab("Config Files")
+    def _build_config_tab(self,tab):
 
         self.config_files = {
             "Apps": "config/apps.json",
@@ -411,10 +420,9 @@ class RoseSettingsApp(ctk.CTk):
 
 #ERROR LOG TAB
 
-    def _build_error_log_tab(self):
-        tab = self.tabview.tab("Gui Error Logs")
+    def _build_error_log_tab(self,tab):
 
-        self.error_log_display = ctk.CTkTextbox(tab, width=440, height=300)
+        self.error_log_display = ctk.CTkTextbox(tab, width=440, height=300, fg_color="#1F2937")
         self.error_log_display.pack(pady=10, padx=10, fill="both", expand=True)
 
         refresh_button = ctk.CTkButton(tab, text="Refresh", command=self._load_error_log)
@@ -442,8 +450,7 @@ class RoseSettingsApp(ctk.CTk):
 
 
 #CONVERSATION LOG TAB
-    def _build_conversation_tab(self):
-        tab = self.tabview.tab("Conversation")
+    def _build_conversation_tab(self,tab):
 
         self.conversation_scroll = ctk.CTkScrollableFrame(tab, width=440, height=260)
         self.conversation_scroll.pack(pady=5, padx=10, fill="both", expand=True)
@@ -601,8 +608,7 @@ class RoseSettingsApp(ctk.CTk):
         
 
 
-    def _build_api_keys_tab(self):
-        tab = self.tabview.tab("API Keys")
+    def _build_api_keys_tab(self,tab):
 
         ctk.CTkLabel(tab, text="Anthropic API Key", font=ctk.CTkFont(weight="bold")).pack(pady=(15, 5))
 
@@ -747,8 +753,7 @@ class RoseSettingsApp(ctk.CTk):
         threading.Thread(target=run_test, daemon=True).start()
 
 
-    def _build_home_tab(self):
-        tab = self.tabview.tab("Home")
+    def _build_home_tab(self,tab):
 
         self.status_canvas = ctk.CTkCanvas(tab, bg="#0d1520", highlightthickness=0)
         self.status_canvas.pack(fill="both", expand=True, padx=0, pady=0)
