@@ -73,6 +73,29 @@ def dispatch(text: str) -> str:
 
             return "Which number did you mean?"
 
+        elif pending["type"] == "disambiguate_calendar_edit":
+            match = re.search(r"\d+", text)
+            if match:
+                index = int(match.group()) - 1
+                if 0 <= index < len(pending["matches"]):
+                    from plugins.calendar_plugin import EditCalendarEventPlugin
+                    selected_event = pending["matches"][index]
+                    clear_pending()
+                    return EditCalendarEventPlugin()._apply_edit(selected_event, pending["edit_info"])
+            return "Which number did you mean?"
+
+
+        elif pending["type"] == "disambiguate_calendar_delete":
+            match = re.search(r"\d+", text)
+            if match:
+                index = int(match.group()) - 1
+                if 0 <= index < len(pending["matches"]):
+                    from commands.google_calendar import delete_google_calendar_event
+                    selected_event = pending["matches"][index]
+                    clear_pending()
+                    return delete_google_calendar_event(selected_event["id"])
+            return "Which number did you mean?"
+
         elif pending["type"] == "confirm_send":
             if "yes" in text.lower() or "yeah" in text.lower():
                 answer = send_message(pending.get("recipient"), pending.get("content"))

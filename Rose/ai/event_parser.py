@@ -68,7 +68,45 @@ DATE_TOOL = [
     }
 ]
 
+EDIT_TOOL = [
+    {
+        "name": "extract_edit",
+        "description": "Extracts what calendar event to find and what to change about it.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "date": {
+                    "type": "string",
+                    "description": "The date the event is on, resolved to format like 'July 29, 2026'. If no date is mentioned, default to today's date.",
+                },
+                "title_hint": {
+                    "type": ["string", "null"],
+                    "description": "A word or phrase from the event's TITLE only (e.g. 'meeting', 'dentist') to help find it. Never put a time here. Null if no title is mentioned.",
+                },
+                "new_time": {"type": ["string", "null"], "description": "The new time, formatted like '5:00 PM'. Null if time isn't changing."},
+                "new_title": {"type": ["string", "null"], "description": "The new title. Null if title isn't changing."},
+            },
+            "required": ["date", "title_hint", "new_time", "new_title"],
+        },
+    }
+]
 
+def extract_edit(text: str) -> dict:
+    today_str = datetime.now().strftime("%A, %B %d, %Y")
+
+    response = client.messages.create(
+        model="claude-haiku-4-5",
+        max_tokens=200,
+        system=f"Today's date is {today_str}. Extract what calendar event the user wants to find and modify.",
+        tools=EDIT_TOOL,
+        tool_choice={"type": "tool", "name": "extract_edit"},
+        messages=[{"role": "user", "content": text}],
+    )
+
+    for block in response.content:
+        if block.type == "tool_use":
+            return block.input
+        
 def extract_date(text: str) -> str:
     """Given natural language like 'tomorrow' or 'next Tuesday', returns a
     resolved date string like 'July 29, 2026'."""

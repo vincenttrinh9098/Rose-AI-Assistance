@@ -10,14 +10,16 @@ from plugins.vscode_plugin import OpenProjectPlugin
 from plugins.github_plugin import ListPRsPlugin, OpenRepoPlugin
 from plugins.files_plugin import FindFilePlugin
 from plugins.steam_plugin import LaunchGamePlugin
+from plugins.calendar_plugin import AddGoogleCalendarEventPlugin, ListGoogleEventsPlugin, EditCalendarEventPlugin,DeleteCalendarEventPlugin
+
 
 
 ALL_PLUGINS = [
     AddNotePlugin(),
-    AddAppleCalendarEventPlugin(),
-    ListEventsPlugin(),
     AddGoogleCalendarEventPlugin(),
     ListGoogleEventsPlugin(),
+    EditCalendarEventPlugin(),
+    DeleteCalendarEventPlugin(),
     AddReminderPlugin(),
     OpenAppPlugin(),
     SearchSitePlugin(),
