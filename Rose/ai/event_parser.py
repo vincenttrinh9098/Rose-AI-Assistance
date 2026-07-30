@@ -131,29 +131,28 @@ def extract_date(text: str) -> str:
             return block.input["date"]
 
 
-        
 def extract_event(text: str) -> dict:
     """Given natural language like 'dentist next Tuesday at 3pm', returns
     {"title": ..., "date": ..., "time": ...} in AppleScript-friendly formats."""
     if not text or not text.strip():
         text = "an event"
-    today_str = datetime.now().strftime("%A, %B %d, %Y")
 
+    today_str = datetime.now().strftime("%A, %B %d, %Y")
     response = client.messages.create(
         model="claude-haiku-4-5",
         max_tokens=200,
-        tools=EVENT_TOOL,
         system=f"Today's date is {today_str}. Extract calendar event details from what the user says.",
+        tools=EVENT_TOOL,
         tool_choice={"type": "tool", "name": "extract_event"},
         messages=[{"role": "user", "content": text}],
-
-    ) 
-
+    )
 
     for block in response.content:
         if block.type == "tool_use":
             event = block.input
-            event["has_details"] = bool(event.get("title")) and event["title"].strip().lower() not in ("unknown", "event", "reminder", "")
-            return event
+            title = event.get("title", "")
+            placeholder_words = ("UNKNOWN", "EVENT", "NONE", "NULL", "REMINDER", "APPOINTMENT", "MEETING", "")
+            has_real_title = bool(title) and title.strip().upper() not in placeholder_words
+            event["has_details"] = has_real_title
 
-    return "empty"
+            return event

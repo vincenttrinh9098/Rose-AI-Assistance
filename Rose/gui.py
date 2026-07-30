@@ -79,7 +79,7 @@ class RoseSettingsApp(ctk.CTk):
 
         self.nav_dropdown = ctk.CTkOptionMenu(
             nav_bar,
-            values=["Home", "Voice", "Hotkey", "Config Files", "Conversation", "Gui Error Logs", "API Keys","Memory"],
+            values=["Home","Conversation", "Screenshots","Voice", "Hotkey","Diagnostics","Gui Error Logs", "API Keys","Config Files","Memory"],
             command=self._switch_screen,
             fg_color="#111827",
             button_color="#2563EB",
@@ -102,6 +102,8 @@ class RoseSettingsApp(ctk.CTk):
         self.screens["Gui Error Logs"] = ctk.CTkFrame(self.content_container, fg_color="transparent")
         self.screens["API Keys"] = ctk.CTkFrame(self.content_container, fg_color="transparent")
         self.screens["Memory"] = ctk.CTkFrame(self.content_container, fg_color="transparent")
+        self.screens["Screenshots"] = ctk.CTkFrame(self.content_container, fg_color="transparent")
+        self.screens["Diagnostics"] = ctk.CTkFrame(self.content_container, fg_color="transparent")
 
         self._build_home_tab(self.screens["Home"])
         self._build_voice_tab(self.screens["Voice"])
@@ -111,6 +113,8 @@ class RoseSettingsApp(ctk.CTk):
         self._build_error_log_tab(self.screens["Gui Error Logs"])
         self._build_api_keys_tab(self.screens["API Keys"])
         self._build_memory_tab(self.screens["Memory"])
+        self._build_screenshots_tab(self.screens["Screenshots"])
+        self._build_diagnostics_tab(self.screens["Diagnostics"])
 
         self._switch_screen("Home")
 
@@ -1418,6 +1422,143 @@ class RoseSettingsApp(ctk.CTk):
 
         save_memory(memory)
         self._load_memory_list()
+
+
+
+    def _build_screenshots_tab(self, tab):
+        ctk.CTkLabel(tab, text="Screenshots", font=ctk.CTkFont(size=20, weight="bold"), text_color="#F8FAFC").pack(pady=(20, 5))
+        #ctk.CTkLabel(tab, text="Screenshots taken b", text_color="#8E9BAE", font=ctk.CTkFont(size=12)).pack(pady=(0, 15))
+
+        refresh_button = ctk.CTkButton(tab, text="Refresh", command=self._load_screenshots)
+        refresh_button.pack(pady=(0, 10))
+
+        self.screenshots_scroll = ctk.CTkScrollableFrame(tab, fg_color="#151E2E")
+        self.screenshots_scroll.pack(fill="both", expand=True, padx=15, pady=(0, 15))
+
+        self._load_screenshots()
+
+
+    def _load_screenshots(self):
+        import os
+        from PIL import Image
+
+        for widget in self.screenshots_scroll.winfo_children():
+            widget.destroy()
+
+        screenshots_dir = "screenshots"
+
+        if not os.path.exists(screenshots_dir):
+            ctk.CTkLabel(
+                self.screenshots_scroll, text="No screenshots yet.",
+                text_color="#64748B", font=ctk.CTkFont(size=13),
+            ).pack(pady=40)
+            return
+
+        files = sorted(os.listdir(screenshots_dir), reverse=True)  # most recent first
+        files = [f for f in files if f.lower().endswith(".png")]
+
+        if not files:
+            ctk.CTkLabel(
+                self.screenshots_scroll, text="No screenshots yet.",
+                text_color="#64748B", font=ctk.CTkFont(size=13),
+            ).pack(pady=40)
+            return
+
+        for filename in files[:30]:  # cap at 30 most recent, to avoid loading hundreds of images
+            filepath = os.path.join(screenshots_dir, filename)
+            self._add_screenshot_row(filepath, filename)
+
+
+    def _add_screenshot_row(self, filepath, filename):
+        from PIL import Image
+
+        row = ctk.CTkFrame(self.screenshots_scroll, fg_color="#1a2938")
+        row.pack(fill="x", pady=5, padx=5)
+
+        try:
+            pil_image = Image.open(filepath)
+            pil_image.thumbnail((200, 150))  # resize for a thumbnail, keeping aspect ratio
+            ctk_image = ctk.CTkImage(light_image=pil_image, size=pil_image.size)
+
+            image_label = ctk.CTkLabel(row, image=ctk_image, text="")
+            image_label.pack(side="left", padx=10, pady=10)
+        except Exception as e:
+            ctk.CTkLabel(row, text="(couldn't load image)", text_color="#EF4444").pack(side="left", padx=10, pady=10)
+
+        info_frame = ctk.CTkFrame(row, fg_color="transparent")
+        info_frame.pack(side="left", fill="both", expand=True, padx=10, pady=10)
+
+        ctk.CTkLabel(info_frame, text=filename, text_color="#F8FAFC", font=ctk.CTkFont(size=12)).pack(anchor="w")
+
+        open_button = ctk.CTkButton(
+            info_frame, text="Open Full Size", width=120, height=28,
+            command=lambda p=filepath: self._open_screenshot(p),
+        )
+        open_button.pack(anchor="w", pady=(8, 0))
+
+
+    def _open_screenshot(self, filepath):
+        import subprocess
+        subprocess.run(["open", filepath])
+
+
+    def _build_diagnostics_tab(self, tab):
+        ctk.CTkLabel(tab, text="Diagnostics", font=ctk.CTkFont(size=20, weight="bold"), text_color="#F8FAFC").pack(pady=(20, 5))
+        ctk.CTkLabel(tab, text="Run functional tests against Rose's core systems", text_color="#8E9BAE", font=ctk.CTkFont(size=12)).pack(pady=(0, 15))
+
+        self.run_tests_button = ctk.CTkButton(tab, text="Run All Tests", command=self._run_diagnostics)
+        self.run_tests_button.pack(pady=(0, 10))
+
+        self.diagnostics_summary = ctk.CTkLabel(tab, text="", font=ctk.CTkFont(size=13, weight="bold"))
+        self.diagnostics_summary.pack(pady=(0, 10))
+
+        self.diagnostics_output = ctk.CTkTextbox(tab, width=500, height=350)
+        self.diagnostics_output.pack(fill="both", expand=True, padx=15, pady=(0, 15))
+
+        # configure the color tags used by _append_diagnostic_line
+        self.diagnostics_output.tag_config("success", foreground="#22C55E")
+        self.diagnostics_output.tag_config("failure", foreground="#EF4444")
+
+
+    def _run_diagnostics(self):
+        self.run_tests_button.configure(state="disabled", text="Running...")
+        self.diagnostics_output.delete("1.0", "end")
+        self.diagnostics_summary.configure(text="")
+
+        threading.Thread(target=self._run_diagnostics_thread, daemon=True).start()
+
+
+    def _run_diagnostics_thread(self):
+        from run_tests import run_all_tests
+
+        def on_progress(name, success, error):
+            line = f"{'✓' if success else '✗'} {name}"
+            if error:
+                line += f"\n    → {error}"
+            self.after(0, self._append_diagnostic_line, line, success)
+
+        passed, failed, failures = run_all_tests(progress_callback=on_progress)
+
+        self.after(0, self._finish_diagnostics, passed, failed)
+
+
+    def _append_diagnostic_line(self, line, success):
+        self.diagnostics_output.insert(
+            "end",
+            line + "\n",
+            "success" if success else "failure"
+        )
+        self.diagnostics_output.see("end")
+
+
+    def _finish_diagnostics(self, passed, failed):
+        color = "#22C55E" if failed == 0 else "#EF4444"
+        self.diagnostics_summary.configure(
+            text=f"Passed: {passed}   Failed: {failed}",
+            text_color=color
+        )
+        self.run_tests_button.configure(state="normal", text="Run All Tests")
+        
 
 if __name__ == "__main__":
     try:

@@ -1,1 +1,1 @@
-{"action": "send_message", "query": "", "result": "I couldn't find that contact"}
+{"action": "delete_calendar_event", "query": "cancel", "result": "Successfully deleted the event"}
