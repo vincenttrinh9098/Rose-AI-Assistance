@@ -1,5 +1,5 @@
 {
-  "hotkey": "<cmd>+<shift>+0",
+  "hotkey": "<ctrl>+0",
   "say_voice_name": "Zoe (Premium)",
   "voice_id": "com.apple.voice.premium.en-US.Zoe"
 }

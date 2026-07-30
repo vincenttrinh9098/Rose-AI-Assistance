@@ -2,220 +2,285 @@
   "youtube": {
     "type": "url",
     "target": "https://youtube.com",
-    "aliases": ["youtube", "yt"]
+    "aliases": [
+      "youtube"
+    ]
   },
-
   "google": {
     "type": "url",
     "target": "https://google.com",
-    "aliases": ["google", "search"]
+    "aliases": [
+      "google",
+      "search"
+    ]
   },
-
   "gmail": {
     "type": "url",
     "target": "https://mail.google.com",
-    "aliases": ["gmail", "email", "mail"]
+    "aliases": [
+      "gmail",
+      "email",
+      "mail"
+    ]
   },
-
   "github": {
     "type": "url",
     "target": "https://github.com",
-    "aliases": ["github", "git"]
+    "aliases": [
+      "github",
+      "git"
+    ]
   },
-
   "reddit": {
     "type": "url",
     "target": "https://reddit.com",
-    "aliases": ["reddit"]
+    "aliases": [
+      "reddit"
+    ]
   },
-
   "chatgpt": {
     "type": "url",
     "target": "https://chat.openai.com",
-    "aliases": ["chatgpt", "gpt", "openai"]
+    "aliases": [
+      "chatgpt",
+      "gpt",
+      "openai"
+    ]
   },
-
   "netflix": {
     "type": "url",
     "target": "https://netflix.com",
-    "aliases": ["netflix"]
+    "aliases": [
+      "netflix"
+    ]
   },
-
   "amazon": {
     "type": "url",
     "target": "https://amazon.com",
-    "aliases": ["amazon"]
+    "aliases": [
+      "amazon"
+    ]
   },
-
   "linkedin": {
     "type": "url",
     "target": "https://linkedin.com",
-    "aliases": ["linkedin"]
+    "aliases": [
+      "linkedin"
+    ]
   },
-
   "spotify": {
-      "type": "native_app",
-      "target": "Spotify",
-      "aliases": ["spotify", "music"],
-      "controls": {
-          "play": "tell application \"Spotify\" to play",
-          "pause": "tell application \"Spotify\" to pause",
-          "next": "tell application \"Spotify\" to next track",
-          "previous": "tell application \"Spotify\" to previous track",
-          "quit": "tell application \"Spotify\" to quit"
-      }
+    "type": "native_app",
+    "target": "Spotify",
+    "aliases": [
+      "spotify",
+      "music"
+    ],
+    "controls": {
+      "play": "tell application \"Spotify\" to play",
+      "pause": "tell application \"Spotify\" to pause",
+      "next": "tell application \"Spotify\" to next track",
+      "previous": "tell application \"Spotify\" to previous track",
+      "quit": "tell application \"Spotify\" to quit"
+    }
   },
-"apple_music": {
+  "apple_music": {
     "type": "native_app",
     "target": "Music",
-    "aliases": ["apple music"],
+    "aliases": [
+      "apple music"
+    ],
     "controls": {
-        "play": "tell application \"Music\" to play",
-        "pause": "tell application \"Music\" to pause",
-        "next": "tell application \"Music\" to next track",
-        "previous": "tell application \"Music\" to previous track",
-        "quit": "tell application \"Music\" to quit"
+      "play": "tell application \"Music\" to play",
+      "pause": "tell application \"Music\" to pause",
+      "next": "tell application \"Music\" to next track",
+      "previous": "tell application \"Music\" to previous track",
+      "quit": "tell application \"Music\" to quit"
     }
-},
+  },
   "discord": {
     "type": "native_app",
     "target": "discord",
-    "aliases": ["discord"]
+    "aliases": [
+      "discord"
+    ]
   },
-
   "visual studio code": {
     "type": "native_app",
     "target": "code",
-    "aliases": ["vscode", "vs code", "visual studio code", "code"]
+    "aliases": [
+      "vscode",
+      "vs code",
+      "visual studio code",
+      "code"
+    ]
   },
-
   "chrome": {
     "type": "native_app",
     "target": "chrome",
-    "aliases": ["chrome", "google chrome"]
+    "aliases": [
+      "chrome",
+      "google chrome"
+    ]
   },
-
   "firefox": {
     "type": "native_app",
     "target": "firefox",
-    "aliases": ["firefox"]
+    "aliases": [
+      "firefox"
+    ]
   },
-
   "edge": {
     "type": "native_app",
     "target": "msedge",
-    "aliases": ["edge", "microsoft edge"]
+    "aliases": [
+      "edge",
+      "microsoft edge"
+    ]
   },
-
   "safari": {
     "type": "native_app",
     "target": "Safari",
-    "aliases": ["safari"]
+    "aliases": [
+      "safari"
+    ]
   },
-
   "terminal": {
     "type": "native_app",
     "target": "terminal",
-    "aliases": ["terminal", "command prompt", "cmd", "powershell"]
+    "aliases": [
+      "terminal",
+      "command prompt",
+      "cmd",
+      "powershell"
+    ]
   },
-
   "finder": {
     "type": "native_app",
     "target": "Finder",
-    "aliases": ["finder"]
+    "aliases": [
+      "finder"
+    ]
   },
-
   "file explorer": {
     "type": "native_app",
     "target": "explorer",
-    "aliases": ["file explorer", "explorer", "files"]
+    "aliases": [
+      "file explorer",
+      "explorer",
+      "files"
+    ]
   },
-
   "notepad": {
     "type": "native_app",
     "target": "notepad",
-    "aliases": ["notepad"]
+    "aliases": [
+      "notepad"
+    ]
   },
-
   "notes": {
     "type": "native_app",
     "target": "Notes",
-    "aliases": ["notes", "apple notes"]
+    "aliases": [
+      "notes",
+      "apple notes"
+    ]
   },
-
   "calculator": {
     "type": "native_app",
     "target": "calculator",
-    "aliases": ["calculator", "calc"]
+    "aliases": [
+      "calculator",
+      "calc"
+    ]
   },
-
   "calendar": {
     "type": "native_app",
     "target": "calendar",
-    "aliases": ["calendar"]
+    "aliases": [
+      "calendar"
+    ]
   },
-
   "steam": {
     "type": "native_app",
     "target": "steam",
-    "aliases": ["steam"]
+    "aliases": [
+      "steam"
+    ]
   },
-
   "slack": {
     "type": "native_app",
     "target": "slack",
-    "aliases": ["slack"]
+    "aliases": [
+      "slack"
+    ]
   },
-
   "zoom": {
     "type": "native_app",
     "target": "zoom.us",
-    "aliases": ["zoom"]
+    "aliases": [
+      "zoom"
+    ]
   },
-
   "teams": {
     "type": "native_app",
     "target": "teams",
-    "aliases": ["teams", "microsoft teams"]
+    "aliases": [
+      "teams",
+      "microsoft teams"
+    ]
   },
-
   "obs": {
     "type": "native_app",
     "target": "obs64",
-    "aliases": ["obs", "obs studio"]
+    "aliases": [
+      "obs",
+      "obs studio"
+    ]
   },
-
   "vlc": {
     "type": "native_app",
     "target": "vlc",
-    "aliases": ["vlc", "video player"]
+    "aliases": [
+      "vlc",
+      "video player"
+    ]
   },
-
   "photoshop": {
     "type": "native_app",
     "target": "photoshop",
-    "aliases": ["photoshop", "adobe photoshop"]
+    "aliases": [
+      "photoshop",
+      "adobe photoshop"
+    ]
   },
-
   "illustrator": {
     "type": "native_app",
     "target": "illustrator",
-    "aliases": ["illustrator", "adobe illustrator"]
+    "aliases": [
+      "illustrator",
+      "adobe illustrator"
+    ]
   },
   "robinhood": {
     "type": "url",
     "target": "https://robinhood.com",
-    "aliases": ["robinhood"]
-},
-"walmart": {
+    "aliases": [
+      "robinhood"
+    ]
+  },
+  "walmart": {
     "type": "url",
     "target": "https://walmart.com",
-    "aliases": ["walmart"]
-},
-"roblox": {
+    "aliases": [
+      "walmart"
+    ]
+  },
+  "roblox": {
     "type": "native_app",
     "target": "roblox",
-    "aliases": ["war blocks", "warblocks"]
-}
-
+    "aliases": [
+      "war blocks",
+      "warblocks"
+    ]
+  }
 }
