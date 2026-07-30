@@ -937,6 +937,30 @@ class RoseSettingsApp(ctk.CTk):
             self.after(0, self._reset_speak_button)
             return
 
+        buffering_responses = [
+            "Thinking...",
+            "Planning...",
+            "Working on it...",
+            "One moment...",
+            "Just a second...",
+            "Let me think...",
+            "Looking into that...",
+            "Checking...",
+            "Analyzing...",
+            "Processing...",
+            "Gathering information...",
+            "Searching my memory...",
+            "Connecting the dots...",
+            "Figuring that out...",
+            "Almost there...",
+            "Let's see...",
+            "I'm on it...",
+            "Calculating...",
+            "Reviewing your request...",
+            "Preparing a response..."
+        ]
+        initial_response = random.choice(buffering_responses)
+        speak(initial_response)
         response = dispatch(result)
         log_exchange(result, response)
         self.after(0, self._load_home_transcript)
