@@ -29,6 +29,14 @@ STATUS_COLORS = {
 systemWidth = 500
 systemHeight= 550
 
+import os
+import subprocess
+
+PLIST_PATH = os.path.expanduser("~/Library/LaunchAgents/com.vincenttrinh.rose.plist")
+
+
+
+
 customtkinter_appearance = ctk.set_appearance_mode("system")
 ctk.set_default_color_theme("green")  # different accent entirely
 ctk.set_default_color_theme("blue")
@@ -60,7 +68,7 @@ class RoseSettingsApp(ctk.CTk):
         nav_bar = ctk.CTkFrame(self, height=50, fg_color="#0d1520", corner_radius=0)
         nav_bar.pack(fill="x", side="top")
 
-        ctk.CTkLabel(nav_bar, text="Rose", font=ctk.CTkFont(size=16, weight="bold"), text_color="#F8FAFC").pack(side="left", padx=15)
+        ctk.CTkLabel(nav_bar, text="Rose.AI", font=ctk.CTkFont(size=16, weight="bold"), text_color="#F8FAFC").pack(side="left", padx=15)
 
         self.nav_dropdown = ctk.CTkOptionMenu(
             nav_bar,
@@ -77,6 +85,7 @@ class RoseSettingsApp(ctk.CTk):
         self.content_container.pack(fill="both", expand=True)
 
         # build each screen as its own frame inside content_container
+        self._launchctl_check_counter = 0
         self.screens = {}
         self.screens["Home"] = ctk.CTkFrame(self.content_container, fg_color="#0d1520", corner_radius=0)
         self.screens["Voice"] = ctk.CTkFrame(self.content_container, fg_color="transparent")
@@ -97,6 +106,8 @@ class RoseSettingsApp(ctk.CTk):
         self._switch_screen("Home")
 
 
+
+        
     def _switch_screen(self, screen_name):
         for frame in self.screens.values():
             frame.pack_forget()
@@ -766,6 +777,12 @@ class RoseSettingsApp(ctk.CTk):
         self.status_canvas.bind("<Configure>", self._on_canvas_resize)
         self._poll_status()
 
+
+    def _check_main_process_running(self) -> bool:
+        import subprocess
+        result = subprocess.run(["launchctl", "list"], capture_output=True, text=True)
+        return "com.vincenttrinh.rose" in result.stdout
+
     def _create_ring_items(self):
         self._main_ring_item = self.status_canvas.create_oval(0, 0, 0, 0, outline="#2a3a4a", width=1)
         self._arc_items = [
@@ -774,10 +791,17 @@ class RoseSettingsApp(ctk.CTk):
         ]
         self._text_item = self.status_canvas.create_text(0, 0, text="ROSE", fill="#3a6a9a", font=("Helvetica", 16, "bold"))
         self._status_text_item = self.status_canvas.create_text(0, 0, text="", fill="#6a8aaa", font=("Helvetica", 11))
+        self._running_status_item = self.status_canvas.create_text(0, 0, text="", fill="#22C55E", font=("Helvetica", 10))
         self._ring_items_created = True
+
+        # make the ROSE label clickable, with a hand cursor to hint it's interactive
+        self.status_canvas.tag_bind(self._text_item, "<Button-1>", self._toggle_rose)
+        self.status_canvas.tag_bind(self._text_item, "<Enter>", lambda e: self.status_canvas.config(cursor="pointinghand"))
+        self.status_canvas.tag_bind(self._text_item, "<Leave>", lambda e: self.status_canvas.config(cursor=""))
         
 
-    def _draw_status_ring(self, state):
+
+    def _draw_status_ring(self, state, is_running):
         if not hasattr(self, "_canvas_width"):
             return
 
@@ -787,7 +811,12 @@ class RoseSettingsApp(ctk.CTk):
         center_x = self._canvas_width / 2
         center_y = self._canvas_height / 2
         base_radius = min(self._canvas_width, self._canvas_height) * 0.2
-        color = STATUS_COLORS.get(state, "#3a6a9a")
+
+        if not is_running:
+            color = "#EF4444"  # red, overrides everything else when offline
+        else:
+            color = STATUS_COLORS.get(state, "#3a6a9a")
+
 
         # fixed-size faint background ring, always visible
         self.status_canvas.coords(
@@ -796,8 +825,8 @@ class RoseSettingsApp(ctk.CTk):
             center_x + base_radius, center_y + base_radius,
         )
 
-        self._rotation_angle += 3  # no longer wrapped here - let it grow indefinitely
-
+        if is_running:
+            self._rotation_angle += 3
         # three arcs at different radii and speeds, each offset from the others
 
         arc_configs = [
@@ -825,6 +854,7 @@ class RoseSettingsApp(ctk.CTk):
         self.status_canvas.itemconfig(self._text_item, fill=color)
 
         self.status_canvas.coords(self._status_text_item, center_x, center_y + 30)  # positioned just below the ROSE label
+        self.status_canvas.coords(self._running_status_item, center_x, self._canvas_height - 30)
 
         
 
@@ -844,14 +874,56 @@ class RoseSettingsApp(ctk.CTk):
         self.status_canvas.tag_lower("grid")  # ensure grid stays behind the ring
 
 
+
+    def _start_rose(self):
+        subprocess.run(["launchctl", "load", PLIST_PATH])
+        print("Started Rose")
+
+    def _stop_rose(self):
+        subprocess.run(["launchctl", "unload", PLIST_PATH])
+        print("Stopped Rose")
+
+
+    def _toggle_rose(self, event=None):
+        is_running = self._check_main_process_running()
+
+        if is_running:
+            from core.audio_io import stop_speaking
+            stop_speaking()
+
+            self._stop_rose()
+            self._cached_is_running = False
+        else:
+            self._start_rose()
+            self._cached_is_running = True
+            threading.Thread(target=self._speak_greeting, daemon=True).start()
+            
+
+    def _speak_greeting(self):
+        from core.audio_io import speak
+        speak("Welcome back, how can I assist you today?")
+
     def _poll_status(self):
         from core.status import get_status
         state = get_status()
         self._last_known_state = state
 
-        self._draw_status_ring(state)
+        self._launchctl_check_counter += 1
+        if self._launchctl_check_counter % 50 == 0:
+            self._cached_is_running = self._check_main_process_running()
+
+        is_running = getattr(self, "_cached_is_running", True)  # default to True until first real check completes
+
+        self._draw_status_ring(state, is_running)
+
+        running_text = "● Rose is running" if is_running else "○ Rose is not running"
+        running_color = "#22C55E" if is_running else "#EF4444"
+        if hasattr(self, "_running_status_item"):
+            self.status_canvas.itemconfig(self._running_status_item, text=running_text, fill=running_color)
 
         self.after(20, self._poll_status)
+
+        
         
 
     def _blend_color(self, color_hex, bg_hex, factor):
