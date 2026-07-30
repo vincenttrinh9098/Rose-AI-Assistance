@@ -22,13 +22,17 @@ except (FileNotFoundError, json.JSONDecodeError) as e:
 
 
 
-def search_site(site: str, query: str) -> str:
-    """Searches `site` (looked up in config/search_sites.json) for `query`."""
+def search_site(site: str, query: str, city: str = "Sacramento, CA") -> str:
+    """Searches `site` (looked up in config/search_sites.json) for `query`, optionally scoped to `city`."""
     url_pattern = _sites.get(site.lower())
 
     if url_pattern is None:
         return f"I don't know how to search {site}"
 
     filtered_query = query.replace(" ", "+")
-    webbrowser.open(url_pattern.format(query=filtered_query))
+    filtered_city = city.replace(" ", "+").replace(",", "%2C")
+
+    url = url_pattern.format(query=filtered_query, city=filtered_city) if "{city}" in url_pattern else url_pattern.format(query=filtered_query)
+
+    webbrowser.open(url)
     return f"Searching {site} for {query}"

@@ -22,7 +22,7 @@ try:
 except (FileNotFoundError, json.JSONDecodeError):
     settings = {}
 
-_model = WhisperModel(model_size_or_path="base", device="cpu", compute_type="int8")
+_model = WhisperModel(model_size_or_path="tiny", device="cpu", compute_type="int8")
 
 _current_speech_process = None
 
@@ -40,8 +40,8 @@ def record_and_transcribe(samplerate: int = 16000) -> str:
 def _record_until_silence(
     samplerate: int = 16000,
     chunk_duration: float = 0.1,
-    silence_threshold: float = 0.01,
-    silence_limit: float = 1.5,
+    silence_threshold: float = 0.018,
+    silence_limit: float = 1.0,
     max_duration: float = 15.0,
 ) -> np.ndarray:
     """Records audio until the user stops talking, returns the full recording as a numpy array."""

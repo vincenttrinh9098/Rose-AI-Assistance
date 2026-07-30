@@ -60,3 +60,48 @@ This process is not trusted! Input event monitoring will not be possible until i
 /opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/resource_tracker.py:279: UserWarning: resource_tracker: There appear to be 1 leaked semaphore objects to clean up at shutdown
   warnings.warn('resource_tracker: There appear to be %d '
 This process is not trusted! Input event monitoring will not be possible until it is added to accessibility clients.
+/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/resource_tracker.py:279: UserWarning: resource_tracker: There appear to be 1 leaked semaphore objects to clean up at shutdown
+  warnings.warn('resource_tracker: There appear to be %d '
+This process is not trusted! Input event monitoring will not be possible until it is added to accessibility clients.
+/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/resource_tracker.py:279: UserWarning: resource_tracker: There appear to be 1 leaked semaphore objects to clean up at shutdown
+  warnings.warn('resource_tracker: There appear to be %d '
+This process is not trusted! Input event monitoring will not be possible until it is added to accessibility clients.
+/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/resource_tracker.py:279: UserWarning: resource_tracker: There appear to be 1 leaked semaphore objects to clean up at shutdown
+  warnings.warn('resource_tracker: There appear to be %d '
+This process is not trusted! Input event monitoring will not be possible until it is added to accessibility clients.
+/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/resource_tracker.py:279: UserWarning: resource_tracker: There appear to be 1 leaked semaphore objects to clean up at shutdown
+  warnings.warn('resource_tracker: There appear to be %d '
+This process is not trusted! Input event monitoring will not be possible until it is added to accessibility clients.
+/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/resource_tracker.py:279: UserWarning: resource_tracker: There appear to be 1 leaked semaphore objects to clean up at shutdown
+  warnings.warn('resource_tracker: There appear to be %d '
+This process is not trusted! Input event monitoring will not be possible until it is added to accessibility clients.
+/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/resource_tracker.py:279: UserWarning: resource_tracker: There appear to be 1 leaked semaphore objects to clean up at shutdown
+  warnings.warn('resource_tracker: There appear to be %d '
+/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/resource_tracker.py:279: UserWarning: resource_tracker: There appear to be 1 leaked semaphore objects to clean up at shutdown
+  warnings.warn('resource_tracker: There appear to be %d '
+This process is not trusted! Input event monitoring will not be possible until it is added to accessibility clients.
+could not create image from display
+Traceback (most recent call last):
+  File "/Users/vintrinh/Desktop/vincent_personal_projects/Rose-AI-Assistance/Rose/main.py", line 76, in <module>
+    process_tasks()
+  File "/Users/vintrinh/Desktop/vincent_personal_projects/Rose-AI-Assistance/Rose/main.py", line 65, in process_tasks
+    response = dispatch(result)
+               ^^^^^^^^^^^^^^^^
+  File "/Users/vintrinh/Desktop/vincent_personal_projects/Rose-AI-Assistance/Rose/core/dispatcher.py", line 97, in dispatch
+    return plugin.handle(query, **extra_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/vintrinh/Desktop/vincent_personal_projects/Rose-AI-Assistance/Rose/plugins/vision_plugin.py", line 41, in handle
+    path = take_screenshot()
+           ^^^^^^^^^^^^^^^^^
+  File "/Users/vintrinh/Desktop/vincent_personal_projects/Rose-AI-Assistance/Rose/vision/screenshot.py", line 15, in take_screenshot
+    screenshot = pyautogui.screenshot() 
+                 ^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/vintrinh/Desktop/vincent_personal_projects/Rose-AI-Assistance/Rose/venv/lib/python3.12/site-packages/pyscreeze/__init__.py", line 582, in _screenshot_osx
+    im = ImageGrab.grab()
+         ^^^^^^^^^^^^^^^^
+  File "/Users/vintrinh/Desktop/vincent_personal_projects/Rose-AI-Assistance/Rose/venv/lib/python3.12/site-packages/PIL/ImageGrab.py", line 56, in grab
+    raise subprocess.CalledProcessError(retcode, args)
+subprocess.CalledProcessError: Command '['screencapture', '-x', '/var/folders/86/yy018mws3rx7chc2tz3qsm0w0000gn/T/tmpsxi6un74.png']' returned non-zero exit status 1.
+This process is not trusted! Input event monitoring will not be possible until it is added to accessibility clients.
+/opt/homebrew/Cellar/python@3.12/3.12.13_4/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/resource_tracker.py:279: UserWarning: resource_tracker: There appear to be 1 leaked semaphore objects to clean up at shutdown
+  warnings.warn('resource_tracker: There appear to be %d '

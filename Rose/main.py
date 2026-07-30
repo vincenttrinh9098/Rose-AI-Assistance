@@ -57,20 +57,27 @@ def process_tasks():
         print("You:", result)
 
         if not result:
+            is_speaking.set()
             set_status("speaking")
             speak("I didn't catch that")
+            is_speaking.clear()
             set_status("idle")
             continue
         speak(random.choice(buffering_responses))
         response = dispatch(result)
         log_exchange(result, response)
 
+        is_speaking.set()
         set_status("speaking")
         speak(response)
+        is_speaking.clear()
         set_status("idle")
-
+        
 hotkey_combo = settings.get("hotkey", "<cmd>+<shift>+0")
 hotkey = keyboard.GlobalHotKeys({hotkey_combo: on_activate})
 hotkey.start()
 
 process_tasks()
+
+
+

@@ -14,17 +14,13 @@ class OpenAppPlugin(Plugin):
 
 class SearchSitePlugin(Plugin):
     name = "search_site"
-    
-    description = (
-        "ONLY use this when the user explicitly wants to open search results in their "
-        "browser (e.g. 'search google for X', 'look up X on youtube'). "
-        "Do NOT use this for questions, news requests, or anything where the user wants "
-        "a spoken answer - use general_question instead for those."
-    )
-
+    description = "Searches a specific site (e.g. google, youtube, yelp) for the given terms, optionally in a specific city."
     extra_fields = {
         "site": {"type": ["string", "null"], "description": "The site to search on. Only used for search_site."},
+        "city": {"type": ["string", "null"], "description": "The city to scope the search to (e.g. for Yelp). Defaults to Sacramento if not mentioned."},
     }
 
-    def handle(self, query: str, site: str = None, **kwargs) -> str:
+    def handle(self, query: str, site: str = None, city: str = None, **kwargs) -> str:
+        if city:
+            return search_site(site, query, city)
         return search_site(site, query)

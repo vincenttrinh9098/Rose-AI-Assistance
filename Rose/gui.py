@@ -14,6 +14,7 @@ import random
 import traceback
 import math
 import time
+from core.audio_io import speak,stop_speaking
 
 
 GUI_ERROR_LOG = "logs/gui_error.log"
@@ -132,6 +133,7 @@ class RoseSettingsApp(ctk.CTk):
         current_voice_name = self.settings.get("say_voice_name")
         if current_voice_name and current_voice_name in self.voice_map:
             self.voice_dropdown.set(current_voice_name)
+            
 
         save_button = ctk.CTkButton(tab, text="Save Voice", command=self._save_voice)
         save_button.pack(pady=10)
@@ -141,6 +143,7 @@ class RoseSettingsApp(ctk.CTk):
         selected_id = self.voice_map[selected_name]
         self.settings["voice_id"] = selected_id
         self.settings["say_voice_name"] = selected_name
+        speak(f"Hello, I am {selected_name}")
         save_settings(self.settings)
         print(f"Saved voice: {selected_name}")
 
@@ -876,9 +879,12 @@ class RoseSettingsApp(ctk.CTk):
 
 
     def _start_rose(self):
-        subprocess.run(["launchctl", "load", PLIST_PATH])
-        print("Started Rose")
-
+        result = subprocess.run(["launchctl", "load", PLIST_PATH], capture_output=True, text=True)
+        if result.returncode != 0:
+            print(f"Failed to start Rose: {result.stderr.strip()}")
+        else:
+            print("Started Rose")
+            
     def _stop_rose(self):
         subprocess.run(["launchctl", "unload", PLIST_PATH])
         print("Stopped Rose")
