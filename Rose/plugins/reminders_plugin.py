@@ -7,6 +7,7 @@ class AddReminderPlugin(Plugin):
     name = "add_reminder"
     description = "Adds a reminder, given a phrase with title and optionally date/time."
     extra_fields = {}
+    user_facing_description = "Say \"remind me to [something]\" and I'll add it to your Reminders app."
 
     def handle(self, query: str, **kwargs) -> str:
         event = extract_event(query)

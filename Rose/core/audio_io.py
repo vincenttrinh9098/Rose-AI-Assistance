@@ -51,7 +51,7 @@ def _record_until_silence(
     samplerate: int = 16000,
     chunk_duration: float = 0.1,
     silence_threshold: float = 0.015,
-    silence_limit: float = 1,
+    silence_limit: float = 1.25,
     max_duration: float = 10.0,
 ) -> np.ndarray:
     _cancel_recording.clear()

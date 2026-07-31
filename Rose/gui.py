@@ -66,22 +66,49 @@ def save_settings(settings: dict) -> None:
 class RoseSettingsApp(ctk.CTk):
     def __init__(self):
         super().__init__()
+        from core.paths import ensure_default_configs
+        ensure_default_configs()
+
         self.report_callback_exception = self._log_callback_exception
-        self.title("Rose Settings")
-        self.geometry("700x600")
         self.protocol("WM_DELETE_WINDOW", self._on_close)
+        self.title("Rose Settings")
+        self.geometry("900x650")
 
         self.settings = load_settings()
 
+        if self._is_first_run():
+            self._build_onboarding_screen()
+        else:
+            self._build_main_interface()
+
+
+    def _is_first_run(self) -> bool:
+        key = self._read_env_value("ANTHROPIC_API_KEY")
+        return not key
+
+
+    def _build_main_interface(self):
         # top navigation bar
         nav_bar = ctk.CTkFrame(self, height=50, fg_color="#0d1520", corner_radius=0)
         nav_bar.pack(fill="x", side="top")
 
-        ctk.CTkLabel(nav_bar, text="Rose.AI", font=ctk.CTkFont(size=16, weight="bold"), text_color="#F8FAFC").pack(side="left", padx=15)
+        ctk.CTkLabel(nav_bar, text="Rose", font=ctk.CTkFont(size=16, weight="bold"), text_color="#F8FAFC").pack(side="left", padx=15)
 
         self.nav_dropdown = ctk.CTkOptionMenu(
             nav_bar,
-            values=["Home","Conversation", "Screenshots","Voice", "Hotkey","Diagnostics","Gui Error Logs", "API Keys","Config Files","Memory"],
+            values=[
+                "Home",
+                "Conversation",
+                "Voice",
+                "Hotkey",
+                "Screenshots",
+                "Config Files",
+                "Memory",           
+                "Capabilities",
+                "API Keys",
+                "Diagnostics",
+                "Gui Error Logs",
+            ],
             command=self._switch_screen,
             fg_color="#111827",
             button_color="#2563EB",
@@ -89,12 +116,10 @@ class RoseSettingsApp(ctk.CTk):
         )
         self.nav_dropdown.pack(side="right", padx=15, pady=8)
 
-        # main content container - all screens live here, only one visible at a time
+        # main content container
         self.content_container = ctk.CTkFrame(self, fg_color="#151E2E", corner_radius=0)
         self.content_container.pack(fill="both", expand=True)
 
-        # build each screen as its own frame inside content_container
-        self._launchctl_check_counter = 0
         self.screens = {}
         self.screens["Home"] = ctk.CTkFrame(self.content_container, fg_color="#0d1520", corner_radius=0)
         self.screens["Voice"] = ctk.CTkFrame(self.content_container, fg_color="transparent")
@@ -104,8 +129,9 @@ class RoseSettingsApp(ctk.CTk):
         self.screens["Gui Error Logs"] = ctk.CTkFrame(self.content_container, fg_color="transparent")
         self.screens["API Keys"] = ctk.CTkFrame(self.content_container, fg_color="transparent")
         self.screens["Memory"] = ctk.CTkFrame(self.content_container, fg_color="transparent")
-        self.screens["Screenshots"] = ctk.CTkFrame(self.content_container, fg_color="transparent")
         self.screens["Diagnostics"] = ctk.CTkFrame(self.content_container, fg_color="transparent")
+        self.screens["Screenshots"] = ctk.CTkFrame(self.content_container, fg_color="transparent")
+        self.screens["Capabilities"] = ctk.CTkFrame(self.content_container, fg_color="transparent")
 
         self._build_home_tab(self.screens["Home"])
         self._build_voice_tab(self.screens["Voice"])
@@ -115,15 +141,155 @@ class RoseSettingsApp(ctk.CTk):
         self._build_error_log_tab(self.screens["Gui Error Logs"])
         self._build_api_keys_tab(self.screens["API Keys"])
         self._build_memory_tab(self.screens["Memory"])
-        self._build_screenshots_tab(self.screens["Screenshots"])
         self._build_diagnostics_tab(self.screens["Diagnostics"])
+        self._build_screenshots_tab(self.screens["Screenshots"])
+        self._build_capabilities_tab(self.screens["Capabilities"])
 
         self._switch_screen("Home")
 
+    def _build_onboarding_screen(self):
+        self.onboarding_frame = ctk.CTkFrame(self, fg_color="#0d1520", corner_radius=0)
+        self.onboarding_frame.pack(fill="both", expand=True)
+
+        self.onboarding_step = 0
+        self.onboarding_steps = [
+            self._onboarding_welcome,
+            self._onboarding_api_key,
+            self._onboarding_permissions,
+            self._onboarding_done,
+        ]
+        self._show_onboarding_step()
+
+
+    def _show_onboarding_step(self):
+        for widget in self.onboarding_frame.winfo_children():
+            widget.destroy()
+        self.onboarding_steps[self.onboarding_step]()
+
+
+    def _onboarding_welcome(self):
+        ctk.CTkLabel(self.onboarding_frame, text="Welcome to Rose", font=ctk.CTkFont(size=28, weight="bold"), text_color="#F8FAFC").pack(pady=(100, 10))
+        ctk.CTkLabel(self.onboarding_frame, text="Let's get you set up in a few quick steps.", text_color="#8E9BAE", font=ctk.CTkFont(size=14)).pack(pady=(0, 40))
+        ctk.CTkButton(self.onboarding_frame, text="Get Started", width=200, command=self._onboarding_next).pack()
+
+
+    def _onboarding_api_key(self):
+        ctk.CTkLabel(self.onboarding_frame, text="Connect your Anthropic API key", font=ctk.CTkFont(size=22, weight="bold"), text_color="#F8FAFC").pack(pady=(80, 10))
+        ctk.CTkLabel(self.onboarding_frame, text="Rose uses Claude to understand and respond to you.\nGet a key at console.anthropic.com", text_color="#8E9BAE", justify="center").pack(pady=(0, 20))
+
+        self.onboarding_key_entry = ctk.CTkEntry(self.onboarding_frame, placeholder_text="sk-ant-...", width=350)
+        self.onboarding_key_entry.pack(pady=10)
+
+        ctk.CTkButton(self.onboarding_frame, text="Continue", width=200, command=self._onboarding_save_key).pack(pady=20)
+
+
+    def _onboarding_save_key(self):
+        key = self.onboarding_key_entry.get().strip()
+        if not key:
+            return
+        self._write_env_value("ANTHROPIC_API_KEY", key)
+        self._onboarding_next()
+
+
+    def _onboarding_permissions(self):
+        ctk.CTkLabel(self.onboarding_frame, text="Grant permissions", font=ctk.CTkFont(size=22, weight="bold"), text_color="#F8FAFC").pack(pady=(80, 10))
+        ctk.CTkLabel(
+            self.onboarding_frame,
+            text="Rose needs a few permissions to work:\n\n"
+                "• Microphone — to hear your voice commands\n"
+                "• Input Monitoring — to detect your hotkey\n"
+                "• Accessibility — to control apps like Calendar and Messages\n\n"
+                "Click below to open System Settings, then come back here.",
+            text_color="#8E9BAE", justify="center",
+        ).pack(pady=(0, 20))
+
+        ctk.CTkButton(self.onboarding_frame, text="Open System Settings", width=220, command=self._open_privacy_settings).pack(pady=10)
+        ctk.CTkButton(self.onboarding_frame, text="I've granted permissions", width=220, command=self._onboarding_next).pack(pady=10)
+
+
+    def _open_privacy_settings(self):
+        subprocess.run(["open", "x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent"])
+
+
+    def _onboarding_done(self):
+        ctk.CTkLabel(self.onboarding_frame, text="You're all set!", font=ctk.CTkFont(size=28, weight="bold"), text_color="#22C55E").pack(pady=(100, 10))
+        ctk.CTkButton(self.onboarding_frame, text="Start Using Rose", width=200, command=self._finish_onboarding).pack(pady=20)
+
+
+    def _onboarding_next(self):
+        self.onboarding_step += 1
+        self._show_onboarding_step()
+
+
+    def _finish_onboarding(self):
+        self.onboarding_frame.destroy()
+        self._build_main_interface()
+
+
+    def _generate_plist(self) -> str:
+        """Builds the launchd .plist content, pointing at THIS app's embedded RoseMain."""
+        import sys
+
+        if getattr(sys, 'frozen', False):
+            # running as the bundled .app - find our own bundle's path
+            app_bundle_path = os.path.abspath(os.path.join(os.path.dirname(sys.executable), ".."))
+            rosemain_path = os.path.join(app_bundle_path, "Resources", "RoseMain", "RoseMain")
+        else:
+            # running unbundled during development - point at the dist_gui test build
+            rosemain_path = os.path.abspath("dist_gui/Rose.app/Contents/Resources/RoseMain/RoseMain")
+
+        log_path = os.path.expanduser("~/Library/Application Support/Rose/logs/rose.log")
+        error_log_path = os.path.expanduser("~/Library/Application Support/Rose/logs/rose_error.log")
+        os.makedirs(os.path.dirname(log_path), exist_ok=True)
+
+        return f'''<?xml version="1.0" encoding="UTF-8"?>
+    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+    <plist version="1.0">
+    <dict>
+        <key>Label</key>
+        <string>com.vincenttrinh.rose</string>
+        <key>ProgramArguments</key>
+        <array>
+            <string>{rosemain_path}</string>
+        </array>
+        <key>RunAtLoad</key>
+        <true/>
+        <key>KeepAlive</key>
+        <true/>
+        <key>StandardOutPath</key>
+        <string>{log_path}</string>
+        <key>StandardErrorPath</key>
+        <string>{error_log_path}</string>
+    </dict>
+    </plist>
+    '''
+
+
+    def _install_plist(self):
+        plist_content = self._generate_plist()
+        plist_path = os.path.expanduser("~/Library/LaunchAgents/com.vincenttrinh.rose.plist")
+
+        with open(plist_path, "w") as f:
+            f.write(plist_content)
+
+        print(f"Installed plist at {plist_path}")
+        return plist_path
+
+
+    def _start_rose(self):
+        plist_path = self._install_plist()
+        result = subprocess.run(["launchctl", "load", plist_path], capture_output=True, text=True)
+        from core.status import set_status
+        set_status("idle")
+        if result.returncode != 0:
+            print(f"Failed to start Rose: {result.stderr.strip()}")
+        else:
+            print("Started Rose")
 
     def _on_close(self):
         from core.audio_io import stop_speaking, cancel_recording
         from core.status import set_status
+        #print("_on_close called")
 
         stop_speaking()
         cancel_recording()
@@ -159,8 +325,15 @@ class RoseSettingsApp(ctk.CTk):
         if current_name:
             self.name_entry.insert(0, current_name)
 
-        save_name_button = ctk.CTkButton(tab, text="Save Name", command=self._save_name)
-        save_name_button.pack(pady=(5, 20))
+        save_button = ctk.CTkButton(tab, text="Save Voice", command=self._save_voice)
+        save_button.pack(pady=10)
+
+        ctk.CTkLabel(
+            tab,
+            text="⚠ Restart Rose for voice changes to take effect",
+            text_color="#F59E0B",
+            font=ctk.CTkFont(size=11),
+        ).pack(pady=(0, 10))
 
         engine = pyttsx3.init()
         voices = engine.getProperty('voices')
@@ -258,7 +431,7 @@ class RoseSettingsApp(ctk.CTk):
 
         note = ctk.CTkLabel(
             tab,
-            text="Note: some key combinations are reserved by macOS or other apps.\nUse Test to confirm before saving.",
+            text="Note: some key combinations are reserved by macOS or other apps.\nUse Test to confirm before saving.\n⚠ Restart Rose for hotkey changes to take effect",
             text_color="gray", font=ctk.CTkFont(size=11), justify="center",
         )
         note.pack(pady=(10, 0))
@@ -370,6 +543,49 @@ class RoseSettingsApp(ctk.CTk):
 
         self._on_config_selected(self.config_selector.get())
 
+    def _on_entry_selected(self, selected_entry):
+        for widget in self.form_frame.winfo_children():
+            widget.destroy()
+
+        is_apps_file = self._current_config_path.endswith("apps.json")
+        is_search_sites_file = self._current_config_path.endswith("search_sites.json")
+        is_known_entry = selected_entry in self._current_config_data
+        existing = self._current_config_data.get(selected_entry, {}) if is_known_entry else {}
+
+        self.entry_name_field = ctk.CTkEntry(self.form_frame, placeholder_text="Name (e.g. 'spotify')")
+        self.entry_name_field.pack(pady=5, fill="x")
+        if is_known_entry:
+            self.entry_name_field.insert(0, selected_entry)
+
+        if is_apps_file:
+            self.type_field = ctk.CTkOptionMenu(self.form_frame, values=["url", "native_app"])
+            self.type_field.pack(pady=5, fill="x")
+            if existing.get("type"):
+                self.type_field.set(existing["type"])
+
+            self.target_field = ctk.CTkEntry(self.form_frame, placeholder_text="Target (URL or exact app name)")
+            self.target_field.pack(pady=5, fill="x")
+            if existing.get("target"):
+                self.target_field.insert(0, existing.get("target"))
+
+            self.aliases_field = ctk.CTkEntry(self.form_frame, placeholder_text="Other ways to say this (comma-separated)")
+            self.aliases_field.pack(pady=5, fill="x")
+            if existing.get("aliases"):
+                self.aliases_field.insert(0, ", ".join(existing.get("aliases", [])))
+        elif is_search_sites_file:
+            self.value_field = ctk.CTkEntry(
+                self.form_frame,
+                placeholder_text="URL template with {query} placeholder, e.g. https://example.com/search?q={query}",
+            )
+            self.value_field.pack(pady=5, fill="x")
+            if existing and isinstance(existing, str):
+                self.value_field.insert(0, existing)
+        else:
+            self.value_field = ctk.CTkEntry(self.form_frame, placeholder_text="Identifier or path (e.g., 730 or /Applications/Steam.app)")
+            self.value_field.pack(pady=5, fill="x")
+            if existing and isinstance(existing, str):
+                self.value_field.insert(0, existing)
+                
 
     def _on_config_selected(self, selected_label):
         path = self.config_files[selected_label]
@@ -383,7 +599,7 @@ class RoseSettingsApp(ctk.CTk):
         self._on_entry_selected("New Entry")
 
 
-    def _on_entry_selected(self, selected_entry):
+    def _on_enry_selected(self, selected_entry):
         for widget in self.form_frame.winfo_children():
             widget.destroy()
 
@@ -632,7 +848,8 @@ class RoseSettingsApp(ctk.CTk):
             widget.destroy()
 
         try:
-            with open("logs/conversation.jsonl") as f:
+            from core.paths import path_for
+            with open(path_for("logs", "conversation.jsonl")) as f:
                 lines = f.readlines()
         except FileNotFoundError:
             lines = []
@@ -682,7 +899,7 @@ class RoseSettingsApp(ctk.CTk):
         self.conversation_scroll._parent_canvas.yview_scroll(int(-1 * event.delta), "units")
 
     def _clear_conversation_log(self):
-        open("logs/conversation.jsonl", "w").close()  # truncate the file
+        open(path_for("logs", "conversation.jsonl"), "w").close()
         for widget in self.conversation_scroll.winfo_children():
             widget.destroy()
         print("Conversation history cleared")
@@ -702,6 +919,12 @@ class RoseSettingsApp(ctk.CTk):
 
         save_anthropic_button = ctk.CTkButton(tab, text="Save Anthropic Key", command=self._save_anthropic_key)
         save_anthropic_button.pack(pady=5)
+        ctk.CTkLabel(
+            tab,
+            text="⚠ Restart Rose after saving a new API key",
+            text_color="#F59E0B",
+            font=ctk.CTkFont(size=11),
+        ).pack(pady=(0, 10))
 
         ctk.CTkLabel(tab, text="Google Calendar (optional)", font=ctk.CTkFont(weight="bold")).pack(pady=(25, 5))
 
@@ -888,7 +1111,7 @@ class RoseSettingsApp(ctk.CTk):
             widget.destroy()
 
         try:
-            with open("logs/conversation.jsonl") as f:
+            with open(path_for("logs", "conversation.jsonl")) as f:
                 lines = f.readlines()
         except FileNotFoundError:
             lines = []
@@ -1032,7 +1255,11 @@ class RoseSettingsApp(ctk.CTk):
     def _check_main_process_running(self) -> bool:
         import subprocess
         result = subprocess.run(["launchctl", "list"], capture_output=True, text=True)
-        return "com.vincenttrinh.rose" in result.stdout
+        for line in result.stdout.split("\n"):
+            parts = line.split()
+            if parts and parts[-1] == "com.vincenttrinh.rose":
+                return True
+        return False
 
     def _create_ring_items(self):
         self._main_ring_item = self.status_canvas.create_oval(0, 0, 0, 0, outline="#2a3a4a", width=1)
@@ -1204,15 +1431,6 @@ class RoseSettingsApp(ctk.CTk):
         self.status_canvas.tag_lower("grid")  # ensure grid stays behind the ring
 
 
-
-    def _start_rose(self):
-        result = subprocess.run(["launchctl", "load", PLIST_PATH], capture_output=True, text=True)
-        from core.status import set_status
-        set_status("idle")
-        if result.returncode != 0:
-            print(f"Failed to start Rose: {result.stderr.strip()}")
-        else:
-            print("Started Rose")
             
     def _stop_rose(self):
         subprocess.run(["launchctl", "unload", PLIST_PATH])
@@ -1221,10 +1439,11 @@ class RoseSettingsApp(ctk.CTk):
         stop_speaking()
         cancel_recording()
         set_status("idle")
-        print("Stopped Rose")
+        #print("Stopped Rose")
 
 
     def _toggle_rose(self, event=None):
+        #print(">>> _toggle_rose called, is_running check follows")
         is_running = self._check_main_process_running()
 
         if is_running:
@@ -1562,7 +1781,57 @@ class RoseSettingsApp(ctk.CTk):
             text_color=color
         )
         self.run_tests_button.configure(state="normal", text="Run All Tests")
-        
+
+
+    def _build_capabilities_tab(self, tab):
+        ctk.CTkLabel(tab, text="What Rose Can Do", font=ctk.CTkFont(size=20, weight="bold"), text_color="#F8FAFC").pack(pady=(20, 5))
+        ctk.CTkLabel(tab, text="Every capability Rose has, and how to trigger it", text_color="#8E9BAE", font=ctk.CTkFont(size=12)).pack(pady=(0, 15))
+
+        search_frame = ctk.CTkFrame(tab, fg_color="transparent")
+        search_frame.pack(pady=(0, 10), padx=15, fill="x")
+
+        self.capabilities_search = ctk.CTkEntry(search_frame, placeholder_text="Search capabilities...")
+        self.capabilities_search.pack(fill="x")
+        self.capabilities_search.bind("<KeyRelease>", lambda e: self._load_capabilities())
+
+        self.capabilities_scroll = ctk.CTkScrollableFrame(tab, fg_color="#151E2E")
+        self.capabilities_scroll.pack(fill="both", expand=True, padx=15, pady=(0, 15))
+
+        self._load_capabilities()
+
+
+    def _load_capabilities(self):
+        from plugins.registry import ALL_PLUGINS
+
+        for widget in self.capabilities_scroll.winfo_children():
+            widget.destroy()
+
+        search_term = self.capabilities_search.get().strip().lower() if hasattr(self, "capabilities_search") else ""
+
+        for plugin in ALL_PLUGINS:
+            name_display = plugin.name.replace("_", " ").title()
+            description = plugin.user_facing_description or plugin.description
+
+            if search_term and search_term not in name_display.lower() and search_term not in description.lower():
+                continue
+
+            self._add_capability_card(name_display, description)
+
+    def _add_capability_card(self, name: str, description: str):
+        card = ctk.CTkFrame(self.capabilities_scroll, fg_color="#1a2938", corner_radius=10)
+        card.pack(fill="x", pady=6, padx=5)
+
+        ctk.CTkLabel(
+            card, text=name, font=ctk.CTkFont(size=14, weight="bold"), text_color="#3B82F6", anchor="w"
+        ).pack(fill="x", padx=15, pady=(12, 4))
+
+        ctk.CTkLabel(
+            card, text=description, font=ctk.CTkFont(size=12), text_color="#CBD5E1",
+            anchor="w", justify="left", wraplength=650,
+        ).pack(fill="x", padx=15, pady=(0, 12))
+
+
+
 
 if __name__ == "__main__":
     try:

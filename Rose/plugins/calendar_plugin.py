@@ -28,6 +28,8 @@ class AddGoogleCalendarEventPlugin(Plugin):
         "otherwise use add_apple_calendar_event instead."
     )
     extra_fields = {}
+    user_facing_description = "Say \"add a Google Calendar event for [something]\" to schedule it on Google specifically."
+
 
     def handle(self, query: str, **kwargs) -> str:
         event = extract_event(query)
@@ -66,6 +68,7 @@ class ListGoogleEventsPlugin(Plugin):
         "This is NOT the default - if unsure, use list_events instead."
     )
     extra_fields = {}
+    user_facing_description = "Ask \"what's on my google calendar today/tomorrow\" to hear your schedule read back to you."
 
     def handle(self, query: str, **kwargs) -> str:
         if not query:
@@ -85,6 +88,8 @@ class EditCalendarEventPlugin(Plugin):
         "these usually refer to an event just discussed."
     )
     extra_fields = {}
+    user_facing_description = "Say things like \"change my 3pm to 5pm\" or \"actually make that 6pm\" to update an event I just created or one already on your calendar."
+
 
     def handle(self, query: str, **kwargs) -> str:
         edit_info = extract_edit(query)
@@ -142,6 +147,8 @@ class DeleteCalendarEventPlugin(Plugin):
         "since these usually refer to an event just discussed."
     )
     extra_fields = {}
+    user_facing_description = "Say \"delete my dentist appointment\" or \"remove that event\" to take something off your calendar."
+
 
     def handle(self, query: str, **kwargs) -> str:
         edit_info = extract_edit(query)

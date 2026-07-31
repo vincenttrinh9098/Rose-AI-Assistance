@@ -10,6 +10,8 @@ class GeneralQuestionPlugin(Plugin):
     "This is the DEFAULT for informational requests. Only use search_google if the user "
     "explicitly asks to search/look something up in their browser."
     extra_fields = {}
+    user_facing_description = "Ask me anything — questions, opinions, current events, or just chat."
+
 
     def handle(self, query: str, **kwargs) -> str:
         return _general_question(query)

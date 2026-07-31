@@ -1,21 +1,6 @@
 {
   "identity": {
-    "school": "UCSD",
-    "height": "5\"11",
-    "race": "asian",
-    "name": "Vincent"
+    "name": "user"
   },
-  "goals": {},
-  "interests": {},
-  "technical": {
-    "favorite_programming_language": "Python"
-  },
-  "preferences": {
-    "theme": "dark mode"
-  },
-  "knowledge": {},
-  "projects": [],
-  "lifestyle": {
-    "health": "weightlift"
-  }
+  "preferences": {}
 }

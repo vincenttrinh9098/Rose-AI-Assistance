@@ -15,6 +15,7 @@ class RememberFactPlugin(Plugin):
         "The presence of the trigger word is mandatory, not optional."
     )
     extra_fields = {}
+    user_facing_description = "Say \"remember that...\" followed by something about yourself — like your school, a preference, or a project you're working on — and I'll keep it in mind for future conversations."
 
     def handle(self, query: str, **kwargs) -> str:
         memory_info = extract_memory(query)

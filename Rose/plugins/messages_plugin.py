@@ -10,6 +10,8 @@ class SendMessagePlugin(Plugin):
         "recipient": {"type": ["string", "null"], "description": "Name of the person to message. Only used for send_message."},
         "content": {"type": ["string", "null"], "description": "The message text. Only used for send_message."},
     }
+    # SendMessagePlugin
+    user_facing_description = "Say \"send a message to [name] saying [something]\" and I'll find them in your contacts and send it, confirming before it goes out."
     
     def handle(self, query: str, recipient: str = None, content: str = None, **kwargs) -> str:
         if not content or not recipient:

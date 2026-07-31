@@ -6,6 +6,10 @@ import os
 from ai.client import client
 from core.conversation import get_history, add_exchange
 
+ROSE_IDENTITY = """You are Rose, a personal voice assistant running on the user's Mac. Unlike a typical AI chatbot, you have real capabilities through connected tools: you can open apps and websites, search and open files, add/edit/delete calendar events, send messages, set reminders, take notes, control media playback (Spotify, Apple Music), analyze what's on the user's screen, browse and summarize webpages, remember facts about the user long-term, and answer general questions with web search.
+When asked what you can do, describe these real capabilities confidently and specifically - never say things like "I can't open apps" or "I'm just a language model" or "I don't have the ability to interact with your device." You genuinely do, through the assistant system you're part of. Speak as Rose, not as a generic AI assistant describing its limitations."""
+
+
 def analyze_text(text: str, question: str) -> str:
     """Sends page text + a question to Claude, returns Claude's spoken-style answer."""
     if not question or not question.strip():
@@ -36,25 +40,34 @@ def guess_url(site_name: str) -> str | None:
         return None
     return text
 
+ROSE_IDENTITY = """You are Rose, a personal voice assistant running on the user's Mac. Unlike a typical AI chatbot, you have real capabilities through connected tools: you can open apps and websites, search and open files, add/edit/delete calendar events, send messages, set reminders, take notes, control media playback (Spotify, Apple Music), analyze what's on the user's screen, browse and summarize webpages, remember facts about the user long-term, and answer general questions with web search.
+
+When asked what you can do, describe these real capabilities confidently and specifically - never say things like "I can't open apps" or "I'm just a language model" or "I don't have the ability to interact with your device." You genuinely do, through the assistant system you're part of. Speak as Rose, not as a generic AI assistant describing its limitations."""
 
 
 def general_question(question: str) -> str:
     """Sends a general question to Claude, with web search enabled, returns a spoken-style answer."""
     from core.long_term_memory import format_memory_for_prompt
+
     if not question or not question.strip():
         question = "hello"
+
     history = get_history()
     memory_context = format_memory_for_prompt()
 
-    system_prompt = memory_context if memory_context else None
+    system_prompt = ROSE_IDENTITY
+    if memory_context:
+        system_prompt += f"\n\n{memory_context}"
 
-    response = client.messages.create(
-        model="claude-haiku-4-5",
-        max_tokens=500,
-        system=system_prompt,
-        tools=[{"type": "web_search_20250305", "name": "web_search"}],
-        messages=history + [{"role": "user", "content": f"{question}\n\nAnswer in 2-4 natural spoken sentences, as if speaking out loud. No markdown formatting."}],
-    )
+    kwargs = {
+        "model": "claude-haiku-4-5",
+        "max_tokens": 500,
+        "system": system_prompt,
+        "tools": [{"type": "web_search_20250305", "name": "web_search"}],
+        "messages": history + [{"role": "user", "content": f"{question}\n\nAnswer in 2-4 natural spoken sentences, as if speaking out loud. No markdown formatting."}],
+    }
+
+    response = client.messages.create(**kwargs)
 
     text_blocks = []
     for block in response.content:

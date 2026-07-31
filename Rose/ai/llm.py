@@ -6,6 +6,7 @@ ai/llm.py - now using tool use / structured output instead of prompted JSON.
 from ai.client import client
 from plugins.registry import get_all_action_names, ALL_PLUGINS
 from core.last_action import get_last_action
+import anthropic
 
 def build_tools_schema():
     action_names = get_all_action_names() + ["none"]
@@ -62,12 +63,18 @@ def get_action(text: str) -> dict:
             tool_choice={"type": "tool", "name": "route_command"},
             messages=[{"role": "user", "content": text}],
         )
+    except anthropic.AuthenticationError:
+        print("get_action() failed: invalid or missing API key")
+        return {"action": "auth_error"}
     except Exception as e:
         print(f"get_action() failed: {e}")
-        return {"action": "offline", "query": None}
+        return {"action": "offline"}
 
     for block in response.content:
         if block.type == "tool_use":
-            return block.input
+            result = block.input
+            if not result.get("query") and result.get("app_name"):
+                result["query"] = result["app_name"]
+            return result
 
     return {"action": "none", "query": None}

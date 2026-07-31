@@ -112,7 +112,7 @@ def dispatch(text: str) -> str:
     query = result.get("query")
 
     if action == "offline":
-        return "I'm having trouble connecting right now — check your internet connection"
+        return "I'm having trouble connecting right now — check your internet connection and if you are missing the Anthropic API key"
 
     plugin = get_plugin(action)
     if plugin is not None:

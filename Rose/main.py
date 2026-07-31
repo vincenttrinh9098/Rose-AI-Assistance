@@ -4,6 +4,13 @@ main.py
 Hotkey-triggered voice assistant, suitable for background/launchd operation.
 Supports interrupting speech by pressing the hotkey again mid-response.
 """
+import multiprocessing
+multiprocessing.freeze_support()
+multiprocessing.set_start_method('spawn', force=True)
+
+from core.paths import ensure_default_configs
+ensure_default_configs()
+
 
 import json
 import queue

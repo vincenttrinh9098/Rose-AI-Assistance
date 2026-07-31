@@ -10,6 +10,6 @@ class AddNotePlugin(Plugin):
     name = "add_note"
     description = "Creates a note with the given content."
     extra_fields = {}
-
+    user_facing_description = "Say \"take a note\" or \"add a note that [something]\" and I'll save it to Notes."
     def handle(self, query: str, **kwargs) -> str:
         return _add_note(query)

@@ -3,3 +3,31 @@ python3 setup.py py2app
 
 
 pip3 install pyinstaller
+pyinstaller --onefile --name RoseMain main.py
+
+
+rm -rf build dist
+pyinstaller --onedir --name RoseMain main.py --distpath dist_main
+python3 setup.py py2app --dist-dir dist_gui
+
+
+BUILT main.py:
+rm -rf build dist_main
+pyinstaller --onedir --name RoseMain --collect-data certifi main.py --distpath dist_main
+
+TO BUILD the whole application Rose.app:
+rm -rf build dist_gui
+python3 setup.py py2app --dist-dir dist_gui
+mkdir -p dist_gui/Rose.app/Contents/Resources/RoseMain
+cp -R dist_main/RoseMain/* dist_gui/Rose.app/Contents/Resources/RoseMain/
+xattr -cr dist_gui/Rose.app
+
+
+RUN:
+./dist_gui/Rose.app/Contents/MacOS/Rose
+
+
+Download:
+hdiutil create -volname "Rose" -srcfolder dist_gui/Rose.app -ov -format UDZO Rose.dmg
+ls -la Rose.dmg
+open Rose.dmg
