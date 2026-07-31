@@ -99,14 +99,15 @@ def _record_until_silence(
     return result
 
 def speak(text: str) -> None:
-    """Speaks `text` out loud, platform-appropriate implementation."""
     global _current_speech_process
-
     if platform.system() == "Darwin":
         args = ["say"]
         voice_name = settings.get("say_voice_name")
         if voice_name:
-            args += ["-v", voice_name]
+            check = subprocess.run(["say", "-v", "?"], capture_output=True, text=True)
+            available = voice_name in check.stdout
+            if available:
+                args += ["-v", voice_name]
         args.append(text)
         _current_speech_process = subprocess.Popen(args)
         _current_speech_process.wait()
@@ -116,6 +117,27 @@ def speak(text: str) -> None:
     else:
         print(f"[TTS not supported on this platform] Would say: {text}")
 
+
+def speak(text: str) -> None:
+    global _current_speech_process
+    if platform.system() == "Darwin":
+        args = ["say"]
+        voice_name = settings.get("say_voice_name")
+        if voice_name:
+            check = subprocess.run(["say", "-v", "?"], capture_output=True, text=True)
+            available = voice_name in check.stdout
+            if available:
+                args += ["-v", voice_name]
+        args.append(text)
+        _current_speech_process = subprocess.Popen(args)
+        _current_speech_process.wait()
+    elif platform.system() == "Windows":
+        # TODO: Windows TTS implementation - not built yet, no Windows machine to test on
+        print(f"[Windows TTS not implemented] Would say: {text}")
+    else:
+        print(f"[TTS not supported on this platform] Would say: {text}")
+
+     
 
 def stop_speaking() -> None:
     """Interrupts any currently playing speech."""
