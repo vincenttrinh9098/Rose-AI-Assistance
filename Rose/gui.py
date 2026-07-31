@@ -1162,6 +1162,10 @@ class RoseSettingsApp(ctk.CTk):
 
 
     def _on_speak_button_click(self):
+        if getattr(self, "_speak_button_locked", False):
+            print("Rose is still starting up - please wait a moment")
+            return
+
         if not self._check_main_process_running():
             print("Rose isn't running - start it first")
             return
@@ -1512,6 +1516,7 @@ class RoseSettingsApp(ctk.CTk):
         print("Stopped Rose")
 
 
+
     def _toggle_rose(self, event=None):
         is_running = self._check_main_process_running()
 
@@ -1527,9 +1532,23 @@ class RoseSettingsApp(ctk.CTk):
         else:
             self._reset_all_voice_state()
 
+            self._speak_button_locked = True  # block Speak button temporarily
             self._start_rose()
             self._cached_is_running = True
             threading.Thread(target=self._speak_greeting, daemon=True).start()
+
+            # unlock after 8 seconds
+            self.after(5500, self._unlock_speak_button)
+
+
+    def _unlock_speak_button(self):
+        self._speak_button_locked = False
+        if hasattr(self, "speak_button"):
+            self.speak_button.configure(
+                text="◉  SPEAK", state="normal",
+                border_color="#3B82F6", text_color="#3B82F6",
+            )
+
 
             
             
@@ -1585,12 +1604,15 @@ class RoseSettingsApp(ctk.CTk):
                 self.speak_button.place_forget()
 
         is_speaking_now = (state == "speaking")
-        if is_speaking_now:
-            if not self.stop_talking_button.winfo_ismapped():
-                self.stop_talking_button.place(relx=0.5, rely=0.95, anchor="center")
+        if is_running or self._gui_is_speaking or getattr(self, "_gui_is_listening", False):
+            if not self.speak_button.winfo_ismapped():
+                self.speak_button.place(relx=0.5, rely=0.85, anchor="center")
+
+            if getattr(self, "_speak_button_locked", False):
+                self.speak_button.configure(state="disabled", text="◉  Starting up...", border_color="#6B7280", text_color="#6B7280")
         else:
-            if self.stop_talking_button.winfo_ismapped():
-                self.stop_talking_button.place_forget()
+            if self.speak_button.winfo_ismapped():
+                self.speak_button.place_forget()
 
         self.after(20, self._poll_status)
 
