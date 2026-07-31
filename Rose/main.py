@@ -15,7 +15,9 @@ from core.conversation_log import log_exchange
 import random 
 from core.status import set_status
 
-SETTINGS_PATH = "config/settings.json"
+from core.paths import path_for
+
+SETTINGS_PATH = path_for("config", "settings.json")
 
 print("Ready to begin...")
 try:
