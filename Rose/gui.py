@@ -19,6 +19,18 @@ from core.audio_io import speak, stop_speaking
 
 from core.paths import path_for
 
+
+# gui.py
+def _get_version():
+    try:
+        with open(path_for("VERSION")) as f:
+            return f.read().strip()
+    except FileNotFoundError:
+        return "dev"
+
+ROSE_VERSION = _get_version()
+
+
 GUI_ERROR_LOG = path_for("logs", "gui_error.log")
 SETTINGS_PATH = path_for("config", "settings.json")
 ENV_PATH = path_for(".env")  
@@ -1861,7 +1873,6 @@ class RoseSettingsApp(ctk.CTk):
             filepath = os.path.join(screenshots_dir, filename)
             self._add_screenshot_row(filepath, filename)
 
-
     def _add_screenshot_row(self, filepath, filename):
         from PIL import Image
 
@@ -1870,12 +1881,12 @@ class RoseSettingsApp(ctk.CTk):
 
         try:
             pil_image = Image.open(filepath)
-            pil_image.thumbnail((200, 150))  # resize for a thumbnail, keeping aspect ratio
+            pil_image.thumbnail((200, 150))
             ctk_image = ctk.CTkImage(light_image=pil_image, size=pil_image.size)
 
             image_label = ctk.CTkLabel(row, image=ctk_image, text="")
             image_label.pack(side="left", padx=10, pady=10)
-        except Exception as e:
+        except Exception:
             ctk.CTkLabel(row, text="(couldn't load image)", text_color="#EF4444").pack(side="left", padx=10, pady=10)
 
         info_frame = ctk.CTkFrame(row, fg_color="transparent")
@@ -1883,12 +1894,32 @@ class RoseSettingsApp(ctk.CTk):
 
         ctk.CTkLabel(info_frame, text=filename, text_color="#F8FAFC", font=ctk.CTkFont(size=12)).pack(anchor="w")
 
+        button_row = ctk.CTkFrame(info_frame, fg_color="transparent")
+        button_row.pack(anchor="w", pady=(8, 0))
+
         open_button = ctk.CTkButton(
-            info_frame, text="Open Full Size", width=120, height=28,
+            button_row, text="Open Full Size", width=120, height=28,
             command=lambda p=filepath: self._open_screenshot(p),
         )
-        open_button.pack(anchor="w", pady=(8, 0))
+        open_button.grid(row=0, column=0, padx=(0, 8))
 
+        delete_button = ctk.CTkButton(
+            button_row, text="Delete", width=80, height=28,
+            fg_color="darkred", hover_color="#7f1d1d",
+            command=lambda p=filepath: self._delete_screenshot(p),
+        )
+        delete_button.grid(row=0, column=1)
+
+
+    def _delete_screenshot(self, filepath):
+        import os
+        try:
+            os.remove(filepath)
+            print(f"Deleted screenshot: {filepath}")
+        except Exception as e:
+            print(f"Failed to delete screenshot: {e}")
+        self._load_screenshots()
+        
 
     def _open_screenshot(self, filepath):
         import subprocess
@@ -1896,7 +1927,7 @@ class RoseSettingsApp(ctk.CTk):
 
 
     def _build_diagnostics_tab(self, tab):
-        ctk.CTkLabel(tab, text="Diagnostics", font=ctk.CTkFont(size=20, weight="bold"), text_color="#F8FAFC").pack(pady=(20, 5))
+        ctk.CTkLabel(tab, text= f"Diagnostics for Rose {ROSE_VERSION}", font=ctk.CTkFont(size=20, weight="bold"), text_color="#F8FAFC").pack(pady=(20, 5))
         ctk.CTkLabel(tab, text="Run functional tests against Rose's core systems", text_color="#8E9BAE", font=ctk.CTkFont(size=12)).pack(pady=(0, 15))
 
         self.run_tests_button = ctk.CTkButton(tab, text="Run All Tests", command=self._run_diagnostics)
