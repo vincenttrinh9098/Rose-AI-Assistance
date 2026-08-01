@@ -1161,6 +1161,8 @@ class RoseSettingsApp(ctk.CTk):
 
 
 
+
+
     def _on_speak_button_click(self):
         if getattr(self, "_speak_button_locked", False):
             print("Rose is still starting up - please wait a moment")
@@ -1173,8 +1175,9 @@ class RoseSettingsApp(ctk.CTk):
         from core.status import get_status, set_status
         from core.audio_io import stop_speaking, cancel_recording
 
-        if getattr(self, "_voice_thread_active", False):
-            # a request is already in flight - interrupt it, then wait a moment before starting fresh
+        was_interrupting = get_status() == "speaking" or self._gui_is_speaking or getattr(self, "_voice_thread_active", False)
+
+        if was_interrupting:
             stop_speaking()
             cancel_recording()
             self._gui_is_speaking = False
@@ -1190,8 +1193,8 @@ class RoseSettingsApp(ctk.CTk):
             border_color="#22C55E", text_color="#22C55E",
         )
 
-        threading.Thread(target=self._process_voice_message, args=(my_id,), daemon=True).start()
-
+        threading.Thread(target=self._process_voice_message, args=(my_id, was_interrupting), daemon=True).start()
+        
 
 
     def _on_stop_talking_click(self):
@@ -1222,9 +1225,12 @@ class RoseSettingsApp(ctk.CTk):
         self.speak_button.configure(text="◉  SPEAK", state="normal", border_color="#3B82F6", text_color="#3B82F6")
 
 
-    def _process_voice_message(self, my_id):
+    def _process_voice_message(self, my_id,was_interrupting=False):
         self._voice_thread_active = True
         try:
+            import time
+            if was_interrupting:
+                time.sleep(0.15)
             from core.audio_io import record_and_transcribe, speak
             from core.dispatcher import dispatch
             from core.conversation_log import log_exchange
@@ -1321,11 +1327,24 @@ class RoseSettingsApp(ctk.CTk):
         return False
 
     def _create_ring_items(self):
-        self._main_ring_item = self.status_canvas.create_oval(0, 0, 0, 0, outline="#2a3a4a", width=1)
+        self._main_ring_item = self.status_canvas.create_oval(
+            0, 0, 0, 0,
+            outline="#2a3a4a",
+            width=1
+        )
+
         self._arc_items = [
-            self.status_canvas.create_arc(0, 0, 0, 0, start=0, extent=50, outline="#3a6a9a", width=3, style="arc")
-            for _ in range(10)
+            self.status_canvas.create_arc(
+                0, 0, 0, 0,
+                start=0,
+                extent=30,
+                outline="#3a6a9a",
+                width=3,
+                style="arc",
+            )
+            for _ in range(20)
         ]
+
         self._text_item = self.status_canvas.create_text(0, 0, text="ROSE", fill="#3a6a9a", font=("Helvetica", 25, "bold"))
         self._status_text_item = self.status_canvas.create_text(0, 0, text="", fill="#6a8aaa", font=("Helvetica", 11))
         self._running_status_item = self.status_canvas.create_text(0, 0, text="", fill="#22C55E", font=("Helvetica", 10))
@@ -1387,35 +1406,68 @@ class RoseSettingsApp(ctk.CTk):
             self._rotation_angle += 3
         # three arcs at different radii and speeds, each offset from the others
 
-        arc_configs = [
-            # Inner ring
-            (base_radius + 8, 0.5, 0),
-            (base_radius + 8, 0.5, 60),
-            (base_radius + 8, 0.5, 120),
-            (base_radius + 8, 0.5, 180),
-            (base_radius + 8, 0.5, 240),
-            (base_radius + 8, 0.5, 300),
 
-            # Outer ring
-            (base_radius + 16, .8, 0),
-            (base_radius + 16, .8, 90),
-            (base_radius + 16, .8, 180),
-            (base_radius + 16, .8, 270),
+        self._arc_configs = [ 
+            # Inner ring (18°) 6
+            (base_radius + 8,  1.00,   0, 18),
+            (base_radius + 8,  1.00,  60, 18),
+            (base_radius + 8,  1.00, 120, 18),
+            (base_radius + 8,  1.00, 180, 18),
+            (base_radius + 8,  1.00, 240, 18),
+            (base_radius + 8,  1.00, 300, 18),
+
+            # Middle ring (30°)4
+            (base_radius + 16, 0.75,   0, 30),
+            (base_radius + 16, 0.75,  90, 30),
+            (base_radius + 16, 0.75, 180, 30),
+            (base_radius + 16, 0.75, 270, 30),
+
+            # Third ring (45°) 4
+            (base_radius + 24, 0.45,  45, 45),
+            (base_radius + 24, 0.45, 135, 45),
+            (base_radius + 24, 0.45, 225, 45),
+            (base_radius + 24, 0.45, 315, 45),
+
+            # Outer ring (60°) 6
+            (base_radius + 30, 0.20,   0, 60),
+            (base_radius + 30, 0.20,  60, 60),
+            (base_radius + 30, 0.20, 120, 60),
+            (base_radius + 30, 0.20, 180, 60),
+            (base_radius + 30, 0.20, 240, 60),
+            (base_radius + 30, 0.20, 300, 60),
         ]
 
-        #base_color = "#EF4444" if not is_running else STATUS_COLORS.get(state, "#3a6a9a")
-        #accent_color = "#F97316" if not is_running else "#8B5CF6"  # secondary color for the gradient
-        for i, (arc_r, speed_mult, offset) in enumerate(arc_configs):
-            angle = (self._rotation_angle * speed_mult + offset) % 360
-            self.status_canvas.coords(
-                self._arc_items[i],
-                center_x - arc_r, center_y - arc_r, center_x + arc_r, center_y + arc_r,
+
+        import math
+
+        for item, (radius, speed, offset, base_extent) in zip(
+            self._arc_items,
+            self._arc_configs,
+        ):
+            angle = (self._rotation_angle * speed + offset) % 360
+
+            pulse = 4 * math.sin(
+                math.radians(self._rotation_angle * 2 + offset)
             )
+
+            extent = base_extent + pulse
+
+            self.status_canvas.coords(
+                item,
+                center_x - radius,
+                center_y - radius,
+                center_x + radius,
+                center_y + radius,
+            )
+
             self.status_canvas.itemconfig(
-                self._arc_items[i],
-                start=angle, outline=color,
+                item,
+                start=angle,
+                extent=extent,
+                outline=color,
                 state="normal",
             )
+            
 
 
         self.status_canvas.coords(self._text_item, center_x, center_y)
@@ -1603,7 +1655,15 @@ class RoseSettingsApp(ctk.CTk):
             if self.speak_button.winfo_ismapped():
                 self.speak_button.place_forget()
 
-        is_speaking_now = (state == "speaking")
+        is_speaking_now = (state == "speaking") or self._gui_is_speaking
+        if is_speaking_now:
+            if not self.stop_talking_button.winfo_ismapped():
+                self.stop_talking_button.place(relx=0.5, rely=0.95, anchor="center")
+        else:
+            if self.stop_talking_button.winfo_ismapped():
+                self.stop_talking_button.place_forget()
+                
+                
         if is_running or self._gui_is_speaking or getattr(self, "_gui_is_listening", False):
             if not self.speak_button.winfo_ismapped():
                 self.speak_button.place(relx=0.5, rely=0.85, anchor="center")

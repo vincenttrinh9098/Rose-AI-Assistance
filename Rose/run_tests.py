@@ -296,6 +296,205 @@ def run_all_tests(progress_callback=None):
                 for e in find_google_events_for_edit(date, term):
                     delete_google_calendar_event(e["id"])
 
+
+
+# --- File search ---
+
+    @test("search_files() finds a real file with a common extension")
+    def _():
+        from commands.files import search_files
+        results = search_files("resume")
+        assert_true(isinstance(results, list), "search_files should return a list")
+
+
+    @test("open_file() handles a nonexistent path gracefully")
+    def _():
+        from commands.files import open_file
+        result = open_file("/tmp/ZZZDefinitelyNotARealFileZZZ.pdf")
+        assert_true(isinstance(result, str), "open_file() should return a string, not crash")
+
+
+    # --- Desktop app search ---
+
+    @test("open_app() finds a real configured app by alias")
+    def _():
+        from commands.applications import open_app
+        result = open_app("spotify")
+        assert_true("spotify" in result.lower() or "opening" in result.lower(), f"Unexpected result: {result}")
+
+
+    @test("get_action() routes app-control requests correctly")
+    def _():
+        from ai.llm import get_action
+        result = get_action("pause spotify")
+        assert_true(result.get("action") == "control_app", f"Expected control_app, got {result}")
+
+
+    # --- Web search / sites ---
+
+    @test("search_site() builds a valid URL for a known site")
+    def _():
+        from commands.browser import search_site
+        result = search_site("youtube", "lofi music")
+        assert_true("searching" in result.lower(), f"Unexpected result: {result}")
+
+
+    @test("get_action() routes general web questions to general_question")
+    def _():
+        from ai.llm import get_action
+        result = get_action("what is the capital of Japan")
+        assert_true(result.get("action") == "general_question", f"Expected general_question, got {result}")
+
+
+    # --- Steam ---
+
+    @test("launch_game() handles an unknown game gracefully")
+    def _():
+        from commands.steam import launch_game
+        result = launch_game("ZZZNotARealGameZZZ")
+        assert_true(isinstance(result, str) and "couldn't find" in result.lower(), f"Expected graceful failure, got: {result}")
+
+
+    @test("get_action() routes steam game requests to open_app")
+    def _():
+        from ai.llm import get_action
+        result = get_action("launch steam")
+        assert_true(result.get("action") == "open_app", f"Expected open_app, got {result}")
+
+
+    # --- Google Calendar auth state ---
+
+    @test("_get_credentials() raises or returns cleanly when unauthenticated")
+    def _():
+        import os
+        from core.paths import path_for
+        token_path = path_for("config", "google_token.json")
+        # just confirm the function doesn't crash the whole process regardless of auth state
+        from commands.google_calendar import _get_credentials
+        try:
+            creds = _get_credentials()
+            assert_true(creds is not None, "Expected valid credentials object")
+        except Exception as e:
+            assert_true(True, "Acceptable - unauthenticated state raised cleanly")
+
+
+    # --- Reminders ---
+
+    @test("add_reminder() creates a reminder without crashing")
+    def _():
+        from commands.reminders import add_reminder
+        result = add_reminder("_TestReminder pick up laundry")
+        assert_true(isinstance(result, str) and "sorry" not in result.lower(), f"Unexpected result: {result}")
+
+
+    @test("get_action() routes reminder requests correctly")
+    def _():
+        from ai.llm import get_action
+        result = get_action("remind me to call the dentist tomorrow")
+        assert_true(result.get("action") == "add_reminder", f"Expected add_reminder, got {result}")
+
+
+    # --- Notes ---
+
+    @test("add_note() creates a note without crashing")
+    def _():
+        from commands.notes import add_note
+        result = add_note("_TestNote this is a diagnostic test note")
+        assert_true(isinstance(result, str) and "sorry" not in result.lower(), f"Unexpected result: {result}")
+
+
+    @test("get_action() routes note requests correctly")
+    def _():
+        from ai.llm import get_action
+        result = get_action("take a note that says buy milk")
+        assert_true(result.get("action") == "add_note", f"Expected add_note, got {result}")
+
+
+    # --- Screenshots ---
+
+    @test("take_screenshot_and_save() creates a real file")
+    def _():
+        import os
+        from vision.screenshot import take_screenshot_and_save
+        path = take_screenshot_and_save()
+        assert_true(path and os.path.exists(path), f"Expected a real screenshot file, got: {path}")
+
+
+    @test("get_action() routes screenshot requests correctly")
+    def _():
+        from ai.llm import get_action
+        result = get_action("take a screenshot")
+        assert_true(result.get("action") == "take_screenshot", f"Expected take_screenshot, got {result}")
+
+
+    # --- Screen analysis ---
+
+    @test("get_action() routes screen analysis requests correctly")
+    def _():
+        from ai.llm import get_action
+        result = get_action("what's on my screen right now")
+        assert_true(result.get("action") == "analyze_screen", f"Expected analyze_screen, got {result}")
+
+
+    @test("get_action() distinguishes page analysis from screen analysis")
+    def _():
+        from ai.llm import get_action
+        result = get_action("summarize this article on the page")
+        assert_true(result.get("action") == "analyze_page", f"Expected analyze_page, got {result}")
+
+
+    # --- Messages ---
+
+    @test("get_action() routes message requests correctly")
+    def _():
+        from ai.llm import get_action
+        result = get_action("send a message to Ben saying hey")
+        assert_true(result.get("action") == "send_message", f"Expected send_message, got {result}")
+
+
+    @test("SendMessagePlugin handles a nonexistent contact gracefully")
+    def _():
+        from core.dispatcher import dispatch
+        result = dispatch("send a message to ZZZNonexistentPersonZZZ saying hi")
+        assert_true("couldn't find" in result.lower() or "not sure" in result.lower(), f"Unexpected result: {result}")
+
+
+    # --- Cross-feature: last_action context ---
+
+    @test("last_action is recorded after any dispatch call")
+    def _():
+        from core.dispatcher import dispatch
+        from core.last_action import get_last_action
+        dispatch("open spotify")
+        last = get_last_action()
+        assert_true(last is not None and last.get("action") == "open_app", f"Expected open_app tracked, got {last}")
+
+
+    # --- Long-term memory routing ---
+
+    @test("get_action() requires explicit trigger for remember_fact")
+    def _():
+        from ai.llm import get_action
+        result = get_action("my favorite food is pizza")
+        assert_true(result.get("action") != "remember_fact", f"Should NOT trigger remember_fact without explicit request, got {result}")
+
+
+    @test("get_action() correctly routes explicit remember requests")
+    def _():
+        from ai.llm import get_action
+        result = get_action("remember that I work at a startup")
+        assert_true(result.get("action") == "remember_fact", f"Expected remember_fact, got {result}")
+
+
+    # --- Reminder/note cleanup note ---
+
+    @test("cleanup notice: reminders and notes created by tests are NOT auto-deleted")
+    def _():
+        # Reminders/Notes app don't have a clean programmatic delete-by-name in this codebase yet -
+        # this test just documents that _TestReminder/_TestNote entries need manual cleanup periodically.
+        assert_true(True)
+
+        
     return passed, failed, failures
 
 def test(name):

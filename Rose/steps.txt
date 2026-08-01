@@ -31,3 +31,62 @@ Download:
 hdiutil create -volname "Rose" -srcfolder dist_gui/Rose.app -ov -format UDZO Rose.dmg
 ls -la Rose.dmg
 open Rose.dmg
+
+
+
+
+
+1) rebuild RoseMain:
+cd Rose
+rm -rf build dist_main
+pyinstaller --onedir --name RoseMain --collect-data certifi main.py --distpath dist_main
+./dist_main/RoseMain/RoseMain
+
+
+2) Rebuild Rose.app
+rm -rf build dist_gui
+python3 setup.py py2app --dist-dir dist_gui
+
+3) Add tcl/tk libaries 
+mkdir -p dist_gui/Rose.app/Contents/lib
+cp -R /opt/homebrew/Cellar/tcl-tk/9.0.4/lib/tcl9.0 dist_gui/Rose.app/Contents/lib/
+cp -R /opt/homebrew/Cellar/tcl-tk/9.0.4/lib/tk9.0 dist_gui/Rose.app/Contents/lib/
+
+4) Embed RoseMain:
+mkdir -p dist_gui/Rose.app/Contents/Resources/RoseMain
+cp -R dist_main/RoseMain/* dist_gui/Rose.app/Contents/Resources/RoseMain/
+
+
+5) Ad-hoc sign (as the last step, after all files are in place):
+codesign --force --deep --sign - dist_gui/Rose.app
+
+6) Clear quarantine and test locally:
+xattr -cr dist_gui/Rose.app
+./dist_gui/Rose.app/Contents/MacOS/Rose
+
+7) confirm no secrets leaked into the bundle:
+find dist_gui/Rose.app -name ".env"
+
+8)Build dmg:
+hdiutil create -volname "Rose 1.2" -srcfolder dist_gui/Rose.app -ov -format UDZO Rose1_2.dmg
+
+
+
+
+
+
+Instructions to include when sharing with anyone
+
+Worth writing this out as a short note alongside the .dmg:
+
+Open Rose1_2.dmg, drag Rose to Applications
+Right-click Rose → Open (not double-click) — bypasses the "unidentified developer" warning
+If you see "Rose is damaged and can't be opened":
+
+chmod -R u+w /Applications/Rose.app
+xattr -cr /Applications/Rose.app
+open /Applications/Rose.app
+
+
+Follow onboarding: enter your Anthropic API key, grant Microphone/Input Monitoring/Accessibility permissions when prompted (or manually add via System Settings → Privacy & Security if a prompt doesn't appear)
+Click "ROSE" to start, try the hotkey
