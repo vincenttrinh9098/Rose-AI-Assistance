@@ -22,3 +22,22 @@ def get_status() -> str:
             return json.load(f).get("state", "idle")
     except (FileNotFoundError, json.JSONDecodeError):
         return "idle"
+
+
+CANCEL_PATH = path_for("logs", "cancel_signal.json")
+
+def request_cancel():
+    with open(CANCEL_PATH, "w") as f:
+        json.dump({"cancel": True}, f)
+
+def check_and_clear_cancel() -> bool:
+    try:
+        with open(CANCEL_PATH) as f:
+            data = json.load(f)
+        if data.get("cancel"):
+            with open(CANCEL_PATH, "w") as f:
+                json.dump({"cancel": False}, f)
+            return True
+    except (FileNotFoundError, json.JSONDecodeError):
+        pass
+    return False

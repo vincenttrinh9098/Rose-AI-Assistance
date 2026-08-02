@@ -90,3 +90,58 @@ open /Applications/Rose.app
 
 Follow onboarding: enter your Anthropic API key, grant Microphone/Input Monitoring/Accessibility permissions when prompted (or manually add via System Settings → Privacy & Security if a prompt doesn't appear)
 Click "ROSE" to start, try the hotkey
+
+
+
+Fresh rebuild:
+rm -rf build dist_gui
+python3 setup.py py2app --dist-dir dist_gui
+mkdir -p dist_gui/Rose.app/Contents/lib
+cp -R /opt/homebrew/Cellar/tcl-tk/9.0.4/lib/tcl9.0 dist_gui/Rose.app/Contents/lib/
+cp -R /opt/homebrew/Cellar/tcl-tk/9.0.4/lib/tk9.0 dist_gui/Rose.app/Contents/lib/
+mkdir -p dist_gui/Rose.app/Contents/Resources/RoseMain
+cp -R dist_main/RoseMain/* dist_gui/Rose.app/Contents/Resources/RoseMain/
+codesign --force --deep --sign - dist_gui/Rose.app
+xattr -cr dist_gui/Rose.app
+
+
+
+main.py:
+rm -rf build dist_main
+pyinstaller --onedir --name RoseMain --collect-data certifi main.py --distpath dist_main
+./dist_main/RoseMain/RoseMain
+
+
+gui.py:
+rm -rf build dist_gui
+python3 setup.py py2app --dist-dir dist_gui
+mkdir -p dist_gui/Rose.app/Contents/lib
+cp -R /opt/homebrew/Cellar/tcl-tk/9.0.4/lib/tcl9.0 dist_gui/Rose.app/Contents/lib/
+cp -R /opt/homebrew/Cellar/tcl-tk/9.0.4/lib/tk9.0 dist_gui/Rose.app/Contents/lib/
+mkdir -p dist_gui/Rose.app/Contents/Resources/RoseMain
+cp -R dist_main/RoseMain/* dist_gui/Rose.app/Contents/Resources/RoseMain/
+codesign --force --deep --sign - dist_gui/Rose.app
+xattr -cr dist_gui/Rose.
+
+./dist_gui/Rose.app/Contents/MacOS/Rose
+
+
+clear logs:
+echo "" > ~/Library/Application\ Support/Rose/logs/rose_error.log
+
+check logs:
+cat ~/Library/Application\ Support/Rose/logs/rose_error.log
+
+
+after granting:
+launchctl unload ~/Library/LaunchAgents/com.vincenttrinh.rose.plist
+launchctl load ~/Library/LaunchAgents/com.vincenttrinh.rose.plist
+
+
+
+path:
+/Users/vintrinh/Desktop/vincent_personal_projects/Rose-AI-Assistance/Rose/dist_gui/Rose.app/Contents/Resources/RoseMain/RoseMain
+
+
+launchctl unload ~/Library/LaunchAgents/com.vincenttrinh.rose.plist 2>/dev/null
+pkill -f RoseMain 2>/dev/null

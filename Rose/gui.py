@@ -1185,15 +1185,26 @@ class RoseSettingsApp(ctk.CTk):
             return
 
         from core.status import get_status, set_status
-        from core.audio_io import stop_speaking, cancel_recording
+        from core.audio_io import stop_speaking, cancel_recording,kill_any_speech
 
         was_interrupting = get_status() == "speaking" or self._gui_is_speaking or getattr(self, "_voice_thread_active", False)
 
         if was_interrupting:
+            print(">>> calling stop_speaking")
             stop_speaking()
+            print(">>> calling cancel_recording")
             cancel_recording()
+            print(">>> cancel_recording done")
             self._gui_is_speaking = False
             self._gui_is_listening = False
+            print(">>> calling pkill")
+            import subprocess
+            kill_any_speech()
+            print(">>> pkill done")
+            from core.status import request_cancel
+            request_cancel()
+            print(">>> request_cancel done")
+
 
         self._current_request_id = getattr(self, "_current_request_id", 0) + 1
         my_id = self._current_request_id
@@ -1208,13 +1219,15 @@ class RoseSettingsApp(ctk.CTk):
         threading.Thread(target=self._process_voice_message, args=(my_id, was_interrupting), daemon=True).start()
         
 
-
     def _on_stop_talking_click(self):
         from core.status import set_status
-        from core.audio_io import stop_speaking, cancel_recording
+        from core.audio_io import stop_speaking, cancel_recording,kill_any_speech
 
         stop_speaking()
         cancel_recording()
+
+        import subprocess
+        kill_any_speech()
         self._gui_is_speaking = False
         self._gui_is_listening = False
         set_status("idle")
@@ -1237,28 +1250,35 @@ class RoseSettingsApp(ctk.CTk):
         self.speak_button.configure(text="◉  SPEAK", state="normal", border_color="#3B82F6", text_color="#3B82F6")
 
 
-    def _process_voice_message(self, my_id,was_interrupting=False):
+    def _process_voice_message(self, my_id, was_interrupting=False):
         self._voice_thread_active = True
         try:
             import time
             if was_interrupting:
                 time.sleep(0.15)
+
             from core.audio_io import record_and_transcribe, speak
             from core.dispatcher import dispatch
             from core.conversation_log import log_exchange
-            from core.status import set_status
+            from core.status import set_status, check_and_clear_cancel
+
+            print(f">>> [{my_id}] starting, was_interrupting={was_interrupting}")
 
             self._gui_is_listening = True
             set_status("listening")
             result = record_and_transcribe()
             self._gui_is_listening = False
 
-            print(f">>> my_id={my_id}, current_request_id={self._current_request_id}, result={result}")
+            check_and_clear_cancel()
+            print(f">>> [{my_id}] recorded: '{result}' | current_request_id={self._current_request_id}")
 
             if my_id != self._current_request_id:
-                print(">>> ABANDONING - stale request")
+                print(f">>> [{my_id}] abandoned after recording (superseded)")
+                self.after(0, self._reset_speak_button)
                 return
+
             if not result:
+                print(f">>> [{my_id}] no result, speaking fallback")
                 set_status("speaking")
                 self._gui_is_speaking = True
                 self.after(0, lambda: self._set_speak_button_speaking_state(my_id))
@@ -1269,65 +1289,61 @@ class RoseSettingsApp(ctk.CTk):
                     self.after(0, self._reset_speak_button)
                 return
 
-            if my_id != self._current_request_id or not self._check_main_process_running():
-                    return   
             buffering_responses = [
-                "Let me think about that...",
-                "Give me a moment...",
-                "Let me take a look...",
-                "I'm thinking...",
-                "Let me work through that...",
-                "Let me figure that out...",
-                "One moment while I check...",
-                "I'm looking into it...",
-                "Let me see...",
-                "Let me gather my thoughts...",
-                "I'm putting that together...",
-                "Let me think this through...",
-                "Just a moment...",
-                "I'm working on it...",
-                "Let me check a few things...",
-                "I'm going over that now...",
-                "Let me find the best answer...",
-                "Thinking it through...",
-                "Let me look into that for you..." 
-                ]
-
+                "Let me think about that...", "Give me a moment...", "Let me take a look...",
+                "I'm thinking...", "Let me work through that...", "Let me figure that out...",
+                "One moment while I check...", "I'm looking into it...", "Let me see...",
+                "Let me gather my thoughts...", "I'm putting that together...", "Let me think this through...",
+                "Just a moment...", "I'm working on it...", "Let me check a few things...",
+                "I'm going over that now...", "Let me find the best answer...", "Thinking it through...",
+                "Let me look into that for you...",
+            ]
             initial_response = random.choice(buffering_responses)
 
             self._gui_is_listening = True
             set_status("listening")
+            print(f">>> [{my_id}] speaking buffering phrase")
             speak(initial_response)
             self._gui_is_listening = False
-            if my_id != self._current_request_id or not self._check_main_process_running():
-                    return
-            
+
+            check_and_clear_cancel()
+            if my_id != self._current_request_id:
+                print(f">>> [{my_id}] abandoned after buffering phrase (superseded)")
+                self.after(0, self._reset_speak_button)
+                return
+
+            print(f">>> [{my_id}] dispatching")
             response = dispatch(result)
+            print(f">>> [{my_id}] dispatch returned: {response[:50]}")
+
+            check_and_clear_cancel()
+            if my_id != self._current_request_id:
+                print(f">>> [{my_id}] abandoned after dispatch (superseded)")
+                self.after(0, self._reset_speak_button)
+                return
+
             log_exchange(result, response)
             self.after(0, self._load_home_transcript)
 
-            # NOW switch to gold/"speaking" for the real response
             set_status("speaking")
             self._gui_is_speaking = True
 
             if my_id == self._current_request_id:
                 self.after(0, lambda: self._set_speak_button_speaking_state(my_id))
 
+            print(f">>> [{my_id}] speaking real response")
             speak(response)
+            print(f">>> [{my_id}] real response done")
 
             self._gui_is_speaking = False
             set_status("idle")
             if my_id == self._current_request_id:
                 self.after(0, self._reset_speak_button)
-                
+
         finally:
+            print(f">>> [{my_id}] thread finished")
             self._voice_thread_active = False
-
             
-
-
-
-       
 
     def _check_main_process_running(self) -> bool:
         import subprocess
@@ -1632,7 +1648,6 @@ class RoseSettingsApp(ctk.CTk):
 
         speak(greeting)
 
-
     def _poll_status(self):
         from core.status import get_status
         file_state = get_status()
@@ -1663,6 +1678,19 @@ class RoseSettingsApp(ctk.CTk):
         if is_running or self._gui_is_speaking or getattr(self, "_gui_is_listening", False):
             if not self.speak_button.winfo_ismapped():
                 self.speak_button.place(relx=0.5, rely=0.85, anchor="center")
+
+            if getattr(self, "_speak_button_locked", False):
+                self.speak_button.configure(state="disabled", text="◉  Starting up...", border_color="#6B7280", text_color="#6B7280")
+            elif not getattr(self, "_voice_thread_active", False):
+                if state != getattr(self, "_last_polled_button_state", None):
+                    self._last_polled_button_state = state
+                    if state == "listening":
+                        self.speak_button.configure(text="◉ LISTENING", state="disabled", border_color="#22C55E", text_color="#22C55E")
+                    elif state == "speaking":
+                        self.speak_button.configure(text="◉  SPEAKING (click to interrupt)", state="normal", border_color="#FBBF24", text_color="#FBBF24")
+                    else:
+                        self.speak_button.configure(text="◉  SPEAK", state="normal", border_color="#3B82F6", text_color="#3B82F6")
+                       
         else:
             if self.speak_button.winfo_ismapped():
                 self.speak_button.place_forget()
@@ -1674,18 +1702,11 @@ class RoseSettingsApp(ctk.CTk):
         else:
             if self.stop_talking_button.winfo_ismapped():
                 self.stop_talking_button.place_forget()
-                
-                
-        if is_running or self._gui_is_speaking or getattr(self, "_gui_is_listening", False):
-            if not self.speak_button.winfo_ismapped():
-                self.speak_button.place(relx=0.5, rely=0.85, anchor="center")
 
-            if getattr(self, "_speak_button_locked", False):
-                self.speak_button.configure(state="disabled", text="◉  Starting up...", border_color="#6B7280", text_color="#6B7280")
-        else:
-            if self.speak_button.winfo_ismapped():
-                self.speak_button.place_forget()
-
+        self._transcript_refresh_counter = getattr(self, "_transcript_refresh_counter", 0) + 1
+        if self._transcript_refresh_counter % 500 == 0:
+            self._load_home_transcript()
+            
         self.after(20, self._poll_status)
 
 

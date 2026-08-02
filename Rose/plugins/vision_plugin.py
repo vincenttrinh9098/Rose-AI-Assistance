@@ -16,7 +16,7 @@ class TakeScreenshotPlugin(Plugin):
     def handle(self, query: str, **kwargs) -> str:
         path = take_screenshot_and_save()
         print("Screenshot path is: ", path)
-        return "Took a screenshot"
+        return "I took a screenshot and you can find it under the screenshots tab"
 
 
 class ClickElementPlugin(Plugin):

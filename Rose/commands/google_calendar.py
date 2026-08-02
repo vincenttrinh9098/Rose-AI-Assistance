@@ -40,7 +40,9 @@ def add_google_calendar_event(title: str, date: str, time: str, duration_hours: 
         print(f"add_google_calendar_event() failed: {e}")
         return "Sorry, I couldn't add that to your Google Calendar", None
 
-    return f"Successfully added {title} to your Google Calendar at {time} on {date}", created_event["id"]
+    return f"I Successfully added {title} to your Google Calendar at {time} on {date}", created_event["id"]
+
+
 
 
 def list_todays_google_events(date_str: str) -> str:
@@ -51,10 +53,8 @@ def list_todays_google_events(date_str: str) -> str:
         service = build("calendar", "v3", credentials=creds)
 
         parsed_date = datetime.strptime(date_str, "%B %d, %Y")
-        # explicitly use Pacific time offset, matching your actual events' timezone
         start_of_day = f"{parsed_date.strftime('%Y-%m-%d')}T00:00:00-07:00"
         end_of_day = f"{parsed_date.strftime('%Y-%m-%d')}T23:59:59-07:00"
-
 
         events_result = service.events().list(
             calendarId="primary",
@@ -67,19 +67,31 @@ def list_todays_google_events(date_str: str) -> str:
         events = events_result.get("items", [])
 
         if not events:
-            return "You have no events for this date on Google Calendar"
+            return f"You don't have anything on your calendar for {date_str}"
 
         summaries = []
         for event in events:
-            title = event.get("summary", "Untitled event")
-            start = event["start"].get("dateTime", event["start"].get("date"))
-            summaries.append(f"{title} at {start}")
+            title = event.get("summary", "an untitled event")
+            start_raw = event["start"].get("dateTime", event["start"].get("date"))
+
+            if "T" in start_raw:
+                # has a real time component - format it naturally, e.g. "5:00 PM"
+                start_dt = datetime.fromisoformat(start_raw)
+                time_str = start_dt.strftime("%-I:%M %p")
+                summaries.append(f"{title} at {time_str}")
+            else:
+                # all-day event, no specific time
+                summaries.append(f"{title} (all day)")
 
     except Exception as e:
         print(f"list_todays_google_events() failed: {e}")
-        return "Sorry, I couldn't list your events on Google Calendar"
-   
-    return f"Here's what's on your calendar for {date_str}: {', '.join(summaries)}"
+        return "Sorry, I couldn't check your calendar"
+
+    if len(summaries) == 1:
+        return f"On {date_str}, you have {summaries[0]}"
+
+    return f"On {date_str}, you have {len(summaries)} things: " + ", ".join(summaries[:-1]) + f", and {summaries[-1]}"
+
 
 
 from difflib import SequenceMatcher
@@ -163,7 +175,7 @@ def edit_google_calendar_event(event_id: str, new_date: str = None, new_time: st
         print(f"edit_google_calendar_event() failed: {e}")
         return "Sorry, I couldn't update that event"
 
-    return "Successfully updated the event"
+    return "I Successfully updated the event for you"
 
 
 def delete_google_calendar_event(event_id: str) -> str:
@@ -175,7 +187,7 @@ def delete_google_calendar_event(event_id: str) -> str:
         print(f"delete_google_calendar_event() failed: {e}")
         return "Sorry, I couldn't delete that event"
 
-    return "Successfully deleted the event"
+    return "I Successfully deleted the event for you"
 
 
 

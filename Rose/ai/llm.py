@@ -63,12 +63,19 @@ def get_action(text: str) -> dict:
             tool_choice={"type": "tool", "name": "route_command"},
             messages=[{"role": "user", "content": text}],
         )
+    except anthropic.APIStatusError as e:
+        if "credit balance" in str(e).lower():
+            print(f"get_action() failed: out of API credits - {e}")
+            return {"action": "credits_error"}
+        print(f"get_action() failed: {e}")
+        return {"action": "offline"}
     except anthropic.AuthenticationError:
         print("get_action() failed: invalid or missing API key")
         return {"action": "auth_error"}
     except Exception as e:
         print(f"get_action() failed: {e}")
         return {"action": "offline"}
+
 
     for block in response.content:
         if block.type == "tool_use":

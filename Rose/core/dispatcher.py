@@ -18,8 +18,29 @@ def _similarity(a: str, b: str) -> float:
     return SequenceMatcher(None, a.lower(), b.lower()).ratio()
 
 def dispatch(text: str) -> str:
+
+    import random
+
+    no_input_responses = [
+        "Sorry, I didn't quite catch that.",
+        "Could you say that again?",
+        "I didn't hear anything. Could you try again?",
+        "I'm sorry, I missed that.",
+        "Would you mind repeating that?",
+        "I didn't quite understand. Could you say it one more time?",
+        "Could you repeat that for me?",
+        "I think I missed what you said.",
+        "I didn't catch that. What was that again?",
+        "Sorry, could you try saying that again?",
+        "I'm listening. Could you repeat that?",
+        "Would you mind saying that one more time?",
+        "I didn't quite hear you.",
+        "Could you say that a little more clearly?",
+        "I'm sorry, I didn't catch what you said.",
+    ]
+
     if not text or not text.strip():
-        return "I didn't catch that"
+        return random.choice(no_input_responses)
 
     pending = get_pending()
             
@@ -113,6 +134,8 @@ def dispatch(text: str) -> str:
 
     if action == "offline":
         return "I'm having trouble connecting right now — check your internet connection and if you are missing the Anthropic API key"
+    elif action == "credits_error":
+        return "I'm out of API credits — you'll need to add more at console.anthropic.com"
 
     plugin = get_plugin(action)
     if plugin is not None:
@@ -124,8 +147,6 @@ def dispatch(text: str) -> str:
 
         return response
 
-    
 
-
-    return "Sorry, I didn't quite get that..."
+    return random.choice(no_input_responses)
 

@@ -22,4 +22,4 @@ def add_note(content: str) -> str:
     if not success:
         print(output)
         return "Sorry, I couldn't add your notes"
-    return "Succesfully added to notes"
+    return "I Succesfully added to notes"

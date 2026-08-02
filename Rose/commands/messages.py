@@ -28,7 +28,7 @@ def send_message(recipient: str, content: str) -> str:
     if not success:
         print(output)
         return "Sorry, I couldn't send that message"
-    return "Successfully sent message"
+    return "I Successfully sent message"
 
 def find_contact_matches(name: str) -> list[str]:
     """Returns a list of full names in Contacts matching `name`."""

@@ -16,7 +16,7 @@ import json
 import queue
 import threading
 from pynput import keyboard
-from core.audio_io import record_and_transcribe, speak, stop_speaking
+from core.audio_io import record_and_transcribe, speak, stop_speaking, kill_any_speech
 from core.dispatcher import dispatch
 from core.conversation_log import log_exchange
 import random 
@@ -51,18 +51,29 @@ def on_activate():
         stop_speaking()
         is_speaking.clear()
 
+    import subprocess
+    kill_any_speech()
+
+    from core.status import request_cancel
+    request_cancel()
+
     if task_queue.empty():
         print("Hotkey pressed")
         task_queue.put(True)
 
 
-
 def process_tasks():
     while True:
         task_queue.get()
+        from core.status import check_and_clear_cancel
+        check_and_clear_cancel()  # clear any stale cancel signal before starting fresh
+
         set_status("listening")
-        print("Listening...")
         result = record_and_transcribe()
+
+        if check_and_clear_cancel():
+            continue  # abandoned - GUI took over
+        
         print("You:", result)
 
         if not result:

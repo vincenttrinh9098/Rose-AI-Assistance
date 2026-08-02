@@ -26,4 +26,4 @@ def add_reminder(title: str, date: str = None, time: str = None) -> str:
     if not success:
         print(output)
         return "Sorry, I couldn't make that reminder for you"
-    return f"Added a reminder: {title}"
+    return f"I Added a reminder: {title}"

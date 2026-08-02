@@ -13,3 +13,5 @@ Rose/screenshots/
 Rose/__pycache__/
 *.pyc
 Rose/RoseMain.spec
+venv/
+.DS_Store
