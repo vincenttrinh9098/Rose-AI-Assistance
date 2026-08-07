@@ -2,7 +2,7 @@
 
 Rose is a personal voice assistant for macOS that listens for a hotkey (or a button press), transcribes what you say, and takes real action — opening apps, managing your calendar, sending messages, searching files, analyzing your screen, and more. It runs quietly in the background and comes with a full settings GUI for configuration, diagnostics, and reviewing conversation history.
 
-[Rose.AI](RoseAI.png)
+![Rose.AI](RoseAI.png)
 ## What Rose Can Do
 
 - **Apps & web** — open apps and websites by name, control media playback (Spotify, Apple Music), search specific sites (YouTube, Yelp, Google, and any custom site you add)
